@@ -13,7 +13,6 @@ export const ja = {
     headline: 'Ankiの負荷が手に負えなくなる前に、状況と対策を把握する。',
     subheadline:
       'レビュー負荷の原因を分解し、現実的な調整案を比較して、backlogが増えるか減るかを確認できます。',
-    viewSource: 'ソースを見る',
   },
   language: {
     label: '言語',

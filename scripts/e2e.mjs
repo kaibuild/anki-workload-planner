@@ -12,7 +12,6 @@ const LOCALE_KEY = `${PRODUCT_PREFIX}locale:v1`
 const executablePath = await validateCopiedBrave(process.env.BRAVE_QA_EXECUTABLE_PATH)
 const baseUrl = validateBaseUrl(process.env.QA_BASE_URL ?? 'http://127.0.0.1:4173')
 const allowedRuntimeOrigin = new URL(baseUrl).origin
-const expectedSourceUrl = validateExpectedSourceUrl(process.env.QA_EXPECT_SOURCE_URL)
 const artifactsDir = resolve(process.env.QA_ARTIFACT_DIR ?? 'artifacts/qa')
 const screenshotsDir = join(artifactsDir, 'screenshots')
 const harPath = join(artifactsDir, 'copied-brave-network.har')
@@ -704,10 +703,8 @@ async function assertLocalizedPage(page, locale, appPage) {
     ? 'ログイン・アップロード・解析送信・AIを使わず、ブラウザ内だけで動くAnki負荷計画ツールです。'
     : 'A browser-only, bilingual Anki workload and backlog planning tool. No login, uploads, analytics, or AI.'
   equal(await page.locator('meta[name="description"]').getAttribute('content'), expectedDescription, `Meta description is wrong for ${locale}/${appPage}.`)
-  if (expectedSourceUrl) {
-    const sourceLinks = page.locator(`a[href="${expectedSourceUrl}"]`)
-    assert(await sourceLinks.count() > 0, `The public source link is missing on ${locale}/${appPage}.`)
-  }
+  const removedSourceLabel = locale === 'ja' ? 'ソースを見る' : 'View source'
+  equal(await page.getByRole('link', { name: removedSourceLabel, exact: true }).count(), 0, `The removed source link is visible on ${locale}/${appPage}.`)
   await assertCurrentNavigation(page, locale === 'ja'
     ? { plan: 'プラン', trend: 'backlogの推移', methodology: '仕組みと制限' }[appPage]
     : { plan: 'Plan', trend: 'Backlog trend', methodology: 'Methodology & privacy' }[appPage])
@@ -964,15 +961,6 @@ function validateBaseUrl(value) {
     throw new Error('QA_BASE_URL must be an HTTP loopback URL, or an HTTPS pages.dev URL with QA_ALLOW_EXTERNAL=1.')
   }
   return `${url.origin}/`
-}
-
-function validateExpectedSourceUrl(value) {
-  if (!value?.trim()) return undefined
-  const url = new URL(value)
-  if (url.protocol !== 'https:' || url.hostname !== 'github.com' || url.username || url.password) {
-    throw new Error('QA_EXPECT_SOURCE_URL must be a public HTTPS github.com URL.')
-  }
-  return url.toString().replace(/\/$/, '')
 }
 
 async function validateCopiedBrave(value) {

@@ -23,7 +23,7 @@ import {
 import { buildPlanMarkdown, type ExportLabels } from './lib/exportPlan'
 import { calculatePlanner, getDefaultPlannerInputs } from './lib/planner'
 import { getRecommendationText, selectRecommendation } from './lib/recommendations'
-import { localizedPath, safeHttpUrl, type AppPage } from './lib/routes'
+import { localizedPath, type AppPage } from './lib/routes'
 import {
   clearAllLocalData,
   clearStoredInputs,
@@ -36,8 +36,6 @@ import {
 } from './lib/storage'
 import type { PlannerInputs, PlanMetrics } from './types/planner'
 import type { DailySnapshot } from './types/snapshots'
-
-const sourceUrl = safeHttpUrl(import.meta.env.VITE_SOURCE_REPOSITORY_URL?.trim())
 
 type OperationStatus = 'reset' | 'deleted' | null
 
@@ -233,11 +231,9 @@ function PageShell({
           plan: copy.navigation.plan,
           trend: copy.navigation.trend,
           methodology: copy.navigation.methodology,
-          viewSource: copy.meta.viewSource,
         }}
         locale={locale}
         page={page}
-        sourceUrl={sourceUrl}
         onLocaleChange={changeLocale}
       />
       <TrustStrip strip={copy.trust.strip} local={copy.trust.localOnly} connection={copy.trust.noConnection} />

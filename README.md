@@ -217,16 +217,6 @@ npm run qa:brave
 
 This command builds the app, copies the complete Brave application into a temporary directory, starts a production preview, and runs E2E and Axe checks with an isolated temporary profile. It never launches the installed application or the user's normal profile, and removes the temporary browser copy and profile afterward. The lower-level `npm run test:e2e` intentionally requires `BRAVE_QA_EXECUTABLE_PATH` to point to a copied Brave executable.
 
-### Optional source-repository link
-
-Set `VITE_SOURCE_REPOSITORY_URL` at build time to a valid repository URL:
-
-```bash
-VITE_SOURCE_REPOSITORY_URL=https://github.com/kaibuild/anki-workload-planner npm run build
-```
-
-When defined, the application displays **View source / ソースを見る**. When it is undefined, the source link is omitted; no placeholder or broken link is rendered. Like other `VITE_` variables, this value is embedded in the client bundle and must not contain a secret.
-
 ### Deploy
 
 The app can be served from a static host that rewrites nested application routes to `index.html`. HTTPS is recommended so clipboard features work reliably.
@@ -248,7 +238,6 @@ Future pushes to `main` automatically build and publish the static site on the g
 - Framework preset: Vite
 - Build command: `npm run build`
 - Output directory: `dist`
-- Optional environment variable: `VITE_SOURCE_REPOSITORY_URL`
 
 #### GitHub Pages
 
@@ -441,16 +430,6 @@ npm run qa:brave
 
 このcommandはproduction buildとpreview serverを用意し、Brave application全体を一時directoryへ物理コピーして、隔離した一時profileでE2E・Axe検査を実行します。通常インストール版や通常profileは起動せず、終了時に一時copyとprofileを削除します。低レベルの`npm run test:e2e`は、コピー済み実行ファイルを示す`BRAVE_QA_EXECUTABLE_PATH`を必須とし、別browserへfallbackしません。
 
-### 任意のsource repositoryリンク
-
-build時に有効なrepository URLを指定できます。
-
-```bash
-VITE_SOURCE_REPOSITORY_URL=https://github.com/kaibuild/anki-workload-planner npm run build
-```
-
-定義した場合だけ、アプリに**View source / ソースを見る**を表示します。未定義の場合はリンク自体を表示せず、壊れたリンクやplaceholderは出しません。ほかの`VITE_`変数と同様にclient bundleへ埋め込まれるため、秘密情報は設定しないでください。
-
 ### デプロイ
 
 ネストしたURLを`index.html`へrewriteできる静的hostingへ配置できます。clipboard機能を安定して使うため、HTTPSを推奨します。
@@ -460,8 +439,6 @@ VITE_SOURCE_REPOSITORY_URL=https://github.com/kaibuild/anki-workload-planner npm
 - **Cloudflare Pages Free（本番）：** GitHubの`main` branchと連携し、push後に`npm run build`を実行して`dist/`を自動配信します。生成された`*.pages.dev` URLだけを使用し、Pages Functions、Workers、backend、analytics、有料Cloudflare resourceは使用しません。
 - **Vercel：** framework presetはVite、build commandは`npm run build`、output directoryは`dist`。
 - **GitHub Pages：** 現在のbuildはroot/custom domain向けです。repository subpathで配信する場合は、Vite `base`とSPA fallbackをそのpathに合わせてください。
-
-いずれも、必要に応じてbuild時に`VITE_SOURCE_REPOSITORY_URL`を設定できます。
 
 ### ローカライズ
 

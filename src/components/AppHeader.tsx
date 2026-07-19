@@ -12,20 +12,17 @@ export type HeaderLabels = {
   plan: string
   trend: string
   methodology: string
-  viewSource: string
 }
 
 export function AppHeader({
   labels,
   locale,
   page,
-  sourceUrl,
   onLocaleChange,
 }: {
   labels: HeaderLabels
   locale: Locale
   page: AppPage
-  sourceUrl?: string
   onLocaleChange: (locale: Locale) => void
 }) {
   const pages: Array<[AppPage, string]> = [
@@ -65,20 +62,8 @@ export function AppHeader({
             </div>
           </nav>
 
-          <div className="flex shrink-0 items-center gap-2">
-            {sourceUrl ? (
-              <a className="button-secondary hidden lg:inline-flex" href={sourceUrl} rel="noreferrer" target="_blank">
-                {labels.viewSource}
-              </a>
-            ) : null}
-            <LanguageSwitcher locale={locale} label={labels.languageLabel} english={labels.english} japanese={labels.japanese} onChange={onLocaleChange} />
-          </div>
+          <LanguageSwitcher locale={locale} label={labels.languageLabel} english={labels.english} japanese={labels.japanese} onChange={onLocaleChange} />
         </div>
-        {sourceUrl ? (
-          <a className="button-secondary mb-2 flex w-full lg:hidden" href={sourceUrl} rel="noreferrer" target="_blank">
-            {labels.viewSource}
-          </a>
-        ) : null}
       </div>
     </header>
   )

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { isAppPage, localizedPath, safeHttpUrl } from './routes'
+import { APP_PAGES, isAppPage, localizedPath } from './routes'
 
 describe('localized routes', () => {
   it('recognizes only the three addressable MVP pages', () => {
@@ -12,12 +12,15 @@ describe('localized routes', () => {
   it('builds stable localized paths', () => {
     expect(localizedPath('ja', 'trend')).toBe('/ja/trend')
   })
-})
 
-describe('optional source URL', () => {
-  it('allows only HTTP(S) URLs', () => {
-    expect(safeHttpUrl('https://example.com/source')).toBe('https://example.com/source')
-    expect(safeHttpUrl('javascript:alert(1)')).toBeUndefined()
-    expect(safeHttpUrl('not a URL')).toBeUndefined()
+  it('builds all six localized application routes', () => {
+    expect((['en', 'ja'] as const).flatMap((locale) => APP_PAGES.map((page) => localizedPath(locale, page)))).toEqual([
+      '/en/plan',
+      '/en/trend',
+      '/en/methodology',
+      '/ja/plan',
+      '/ja/trend',
+      '/ja/methodology',
+    ])
   })
 })

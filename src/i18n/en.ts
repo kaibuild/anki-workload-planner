@@ -11,7 +11,6 @@ export const en = {
     headline: 'Understand your Anki workload before it becomes unmanageable.',
     subheadline:
       'See where your review load comes from, compare realistic adjustments, and estimate whether the backlog is likely to grow or shrink.',
-    viewSource: 'View source',
   },
   language: {
     label: 'Language',

@@ -77,7 +77,6 @@ Deployers should:
 - Build from reviewed source with a locked dependency graph.
 - Keep dependencies and build tooling updated after review and testing.
 - Configure appropriate host-level security headers, including a restrictive Content Security Policy where practical.
-- Set `VITE_SOURCE_REPOSITORY_URL` only to a public, trusted URL and never place secrets in any `VITE_` environment variable.
 - Avoid injecting third-party scripts, analytics, remote fonts, or runtime CDN dependencies.
 
 For privacy behavior, see [PRIVACY.md](./PRIVACY.md).
@@ -161,7 +160,6 @@ deployする方には次を推奨します。
 - review済みsourceとlock済みdependency graphからbuildする。
 - reviewとtestを行ったうえでdependencyとbuild toolを更新する。
 - 可能な範囲で制限的なContent Security Policyなど、適切なhost側security headerを設定する。
-- `VITE_SOURCE_REPOSITORY_URL`には公開済みの信頼できるURLだけを設定し、`VITE_`環境変数には秘密情報を入れない。
 - third-party script、analytics、外部font、実行時CDN dependencyを追加しない。
 
 privacy上の動作については[PRIVACY.md](./PRIVACY.md)をご覧ください。
