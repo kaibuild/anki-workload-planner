@@ -714,7 +714,15 @@ async function assertLocalizedPage(page, locale, appPage) {
 }
 
 async function assertCurrentNavigation(page, label) {
-  equal(await page.getByRole('link', { name: label, exact: true }).getAttribute('aria-current'), 'page', `Current navigation is not announced for ${label}.`)
+  const currentLink = page.getByRole('link', { name: label, exact: true })
+  await currentLink.waitFor({ state: 'visible' })
+  await page.waitForFunction(
+    (currentLabel) => [...document.querySelectorAll('a')].some((link) => (
+      link.textContent?.trim() === currentLabel && link.getAttribute('aria-current') === 'page'
+    )),
+    label,
+  )
+  equal(await currentLink.getAttribute('aria-current'), 'page', `Current navigation is not announced for ${label}.`)
 }
 
 async function clearProductData(page) {
