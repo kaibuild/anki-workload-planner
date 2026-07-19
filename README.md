@@ -2,11 +2,23 @@
 
 A calm, deterministic workload planner for understanding and reducing an overwhelming Anki backlog. It is a browser-only, local-first static web application available in English and Japanese.
 
+Live site: [https://anki-workload-planner.pages.dev](https://anki-workload-planner.pages.dev)
+
 Source repository: [https://github.com/kaibuild/anki-workload-planner](https://github.com/kaibuild/anki-workload-planner)
 
 [日本語概要へ](#日本語概要)
 
 ## English overview
+
+### Use online
+
+Open the [live application](https://anki-workload-planner.pages.dev). On a first visit, Japanese browser preferences open the Japanese planner, English preferences open the English planner, and unsupported languages fall back to English. You can switch languages at any time without losing the current page or entered data.
+
+1. Enter the overdue backlog and your normal daily review workload on **Plan**.
+2. Review the workload source, backlog direction, recommended first adjustment, and estimated one-pass duration.
+3. Save optional daily snapshots on **Backlog trend**, and export data only when you want a portable copy.
+
+Planner data stays in this browser's `localStorage` unless you explicitly copy, download, restore, or delete it.
 
 ### The common problem
 
@@ -219,11 +231,17 @@ When defined, the application displays **View source / ソースを見る**. Whe
 
 The app can be served from a static host that rewrites nested application routes to `index.html`. HTTPS is recommended so clipboard features work reliably.
 
-#### Cloudflare Pages
+#### Cloudflare Pages (production)
 
+- Live site: [https://anki-workload-planner.pages.dev](https://anki-workload-planner.pages.dev)
+- Plan: Cloudflare Pages Free
+- Production branch: `main`
+- GitHub-integrated automatic deployments: enabled
 - Build command: `npm run build`
 - Output directory: `dist`
-- Optional environment variable: `VITE_SOURCE_REPOSITORY_URL`
+- Runtime: static assets only; no Pages Functions, Workers, backend, analytics, or paid Cloudflare resource
+
+Future pushes to `main` automatically build and publish the static site on the generated `*.pages.dev` domain. No custom domain or paid hosting feature is required.
 
 #### Vercel
 
@@ -253,6 +271,18 @@ The project is available under the [MIT License](./LICENSE).
 ## 日本語概要
 
 ソースコード: [https://github.com/kaibuild/anki-workload-planner](https://github.com/kaibuild/anki-workload-planner)
+
+公開サイト: [https://anki-workload-planner.pages.dev](https://anki-workload-planner.pages.dev)
+
+### オンラインで使う
+
+[公開アプリ](https://anki-workload-planner.pages.dev)を開いてください。初回アクセス時は、ブラウザの言語設定が日本語なら日本語版、英語なら英語版、未対応言語なら英語版を表示します。言語はいつでも切り替えられ、現在のページや入力内容は保持されます。
+
+1. **プラン**で期限超過backlogと普段のレビュー負荷を入力します。
+2. 負荷の主因、backlogの増減方向、最初に試す調整、一巡までの推定日数を確認します。
+3. 必要に応じて**backlogの推移**で日次スナップショットを保存し、持ち運べるコピーが必要な場合だけ書き出します。
+
+計画データは、コピー・ダウンロード・復元・削除を明示的に実行しない限り、このブラウザの`localStorage`内に留まります。
 
 ### 解決する問題
 
@@ -425,7 +455,9 @@ VITE_SOURCE_REPOSITORY_URL=https://github.com/kaibuild/anki-workload-planner npm
 
 ネストしたURLを`index.html`へrewriteできる静的hostingへ配置できます。clipboard機能を安定して使うため、HTTPSを推奨します。
 
-- **Cloudflare Pages：** build commandは`npm run build`、output directoryは`dist`。
+本番環境は[https://anki-workload-planner.pages.dev](https://anki-workload-planner.pages.dev)で公開しています。
+
+- **Cloudflare Pages Free（本番）：** GitHubの`main` branchと連携し、push後に`npm run build`を実行して`dist/`を自動配信します。生成された`*.pages.dev` URLだけを使用し、Pages Functions、Workers、backend、analytics、有料Cloudflare resourceは使用しません。
 - **Vercel：** framework presetはVite、build commandは`npm run build`、output directoryは`dist`。
 - **GitHub Pages：** 現在のbuildはroot/custom domain向けです。repository subpathで配信する場合は、Vite `base`とSPA fallbackをそのpathに合わせてください。
 
