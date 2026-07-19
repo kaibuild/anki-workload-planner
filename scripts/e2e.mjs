@@ -843,7 +843,7 @@ async function assertTouchTargets(page, label) {
 }
 
 async function runAxe(page, label) {
-  await page.addScriptTag({ content: axe.source })
+  await page.evaluate(axe.source)
   const violations = await page.evaluate(async () => {
     const report = await globalThis.axe.run(document, {
       resultTypes: ['violations'],
