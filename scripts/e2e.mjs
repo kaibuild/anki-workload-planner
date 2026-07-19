@@ -112,7 +112,7 @@ try {
 
       await page.getByRole('button', { name: '日本語', exact: true }).click()
       await waitForPath(page, '/ja/methodology')
-      equal(await page.locator('html').getAttribute('lang'), 'ja', 'Language switch did not update html lang.')
+      await waitForDocumentLanguage(page, 'ja')
       await screenshot(page, 'language-switch.png')
       await page.goBack()
       await waitForPath(page, '/en/methodology')
@@ -685,7 +685,7 @@ async function waitForPath(page, pathname) {
 
 async function assertLocalizedPage(page, locale, appPage) {
   await waitForPath(page, `/${locale}/${appPage}`)
-  equal(await page.locator('html').getAttribute('lang'), locale, `html lang is wrong for ${locale}/${appPage}.`)
+  await waitForDocumentLanguage(page, locale)
   equal(await page.locator('h1').count(), 1, `Expected one H1 on ${locale}/${appPage}.`)
   const expectedTitle = {
     en: {
@@ -711,6 +711,11 @@ async function assertLocalizedPage(page, locale, appPage) {
   await assertCurrentNavigation(page, locale === 'ja'
     ? { plan: 'プラン', trend: 'backlogの推移', methodology: '仕組みと制限' }[appPage]
     : { plan: 'Plan', trend: 'Backlog trend', methodology: 'Methodology & privacy' }[appPage])
+}
+
+async function waitForDocumentLanguage(page, locale) {
+  await page.waitForFunction((expectedLocale) => document.documentElement.lang === expectedLocale, locale)
+  equal(await page.locator('html').getAttribute('lang'), locale, `html lang is wrong for ${locale}.`)
 }
 
 async function assertCurrentNavigation(page, label) {
