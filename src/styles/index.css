@@ -1,0 +1,154 @@
+@import "tailwindcss";
+
+:root {
+  color: #17201e;
+  background: #f7f8f7;
+  color-scheme: light;
+  font-family:
+    ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
+    sans-serif;
+  font-synthesis: none;
+  letter-spacing: 0;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  min-width: 320px;
+  scroll-behavior: smooth;
+  background: #f7f8f7;
+}
+
+body {
+  min-width: 320px;
+  min-height: 100vh;
+  margin: 0;
+  background: #f7f8f7;
+}
+
+.skip-link {
+  position: fixed;
+  z-index: 100;
+  top: 0.5rem;
+  left: 0.5rem;
+  transform: translateY(-160%);
+  border-radius: 0.75rem;
+  background: #0f766e;
+  color: #fff;
+  padding: 0.75rem 1rem;
+  font-weight: 700;
+}
+
+.skip-link:focus {
+  transform: translateY(0);
+}
+
+::selection {
+  color: #052e2b;
+  background: #99f6e4;
+}
+
+button,
+input,
+select,
+textarea,
+summary {
+  font: inherit;
+}
+
+button,
+summary {
+  -webkit-tap-highlight-color: transparent;
+}
+
+summary::-webkit-details-marker {
+  display: none;
+}
+
+input[type="number"] {
+  -moz-appearance: textfield;
+}
+
+:focus-visible {
+  outline: 3px solid #0f766e;
+  outline-offset: 3px;
+}
+
+@layer components {
+  .panel {
+    @apply rounded-2xl border border-slate-200/80 bg-white p-5 sm:p-6;
+  }
+
+  .field {
+    @apply min-h-11 w-full rounded-lg border border-slate-200 bg-slate-50/70 px-3.5 py-2.5 text-base text-slate-950 shadow-none transition-[border-color,background-color,box-shadow] duration-150 hover:border-slate-300 hover:bg-white focus:border-teal-700 focus:bg-white focus:outline-none focus:ring-4 focus:ring-teal-600/10;
+  }
+
+  .button-primary {
+    @apply inline-flex min-h-11 items-center justify-center rounded-lg bg-teal-800 px-4 py-2.5 text-sm font-semibold text-white shadow-[0_1px_2px_rgba(15,118,110,0.16)] transition-[background-color,box-shadow,transform] duration-150 hover:bg-teal-900 hover:shadow-sm active:translate-y-px disabled:cursor-not-allowed disabled:bg-slate-400 disabled:shadow-none;
+  }
+
+  .button-secondary {
+    @apply inline-flex min-h-11 items-center justify-center rounded-lg border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 shadow-none transition-[border-color,background-color,color,transform] duration-150 hover:border-slate-300 hover:bg-slate-50 hover:text-slate-950 active:translate-y-px disabled:cursor-not-allowed disabled:bg-slate-100 disabled:text-slate-500 disabled:shadow-none;
+  }
+
+  .button-danger {
+    @apply inline-flex min-h-11 items-center justify-center rounded-lg border border-rose-200 bg-white px-4 py-2.5 text-sm font-semibold text-rose-700 transition-[border-color,background-color,transform] duration-150 hover:border-rose-300 hover:bg-rose-50 active:translate-y-px;
+  }
+
+  .eyebrow {
+    @apply text-[0.7rem] font-semibold uppercase tracking-[0.1em] text-teal-700;
+  }
+
+  .section-title {
+    @apply text-xl font-semibold tracking-[-0.025em] text-slate-950 sm:text-[1.4rem];
+  }
+
+  .section-description {
+    @apply mt-2 max-w-2xl text-sm leading-6 text-slate-600;
+  }
+
+  .quiet-surface {
+    @apply rounded-xl bg-slate-50/80;
+  }
+}
+
+@supports (text-wrap: balance) {
+  h1,
+  h2,
+  h3 {
+    text-wrap: balance;
+  }
+}
+
+html[lang="ja"] {
+  line-break: strict;
+}
+
+html[lang="ja"] .eyebrow {
+  letter-spacing: 0.02em;
+  text-transform: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+input[type="number"]::-webkit-outer-spin-button,
+input[type="number"]::-webkit-inner-spin-button {
+  margin: 0;
+  -webkit-appearance: none;
+}
