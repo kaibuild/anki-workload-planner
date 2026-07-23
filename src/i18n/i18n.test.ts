@@ -49,6 +49,10 @@ describe('translation dictionaries', () => {
     expect(ja.trust.strip).toBe(
       'ブラウザ内で完結 · ログイン不要 · アップロードなし · AI不使用',
     )
+    expect(en.privacy.connectionBody).toContain('Cloudflare Web Analytics')
+    expect(en.privacy.connectionBody).toContain('planner inputs, snapshots, notes, and exports are not sent')
+    expect(ja.privacy.connectionBody).toContain('Cloudflare Web Analytics')
+    expect(ja.privacy.connectionBody).toContain('計画の入力値、snapshot、メモ、書き出し内容は送信しません')
   })
 })
 

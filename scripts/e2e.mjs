@@ -618,7 +618,7 @@ function monitorContext(context, contextId) {
     }
     pending.set(request, { entry, started })
     harEntries.push(entry)
-    if (!isAllowedRuntimeUrl(request.url())) {
+    if (!isAllowedRuntimeRequest(request)) {
       unexpectedRequests.push(`${request.method()} ${request.url()} (${contextId})`)
     }
   })
@@ -700,8 +700,8 @@ async function assertLocalizedPage(page, locale, appPage) {
   }[locale][appPage]
   equal(await page.title(), expectedTitle, `Document title is wrong for ${locale}/${appPage}.`)
   const expectedDescription = locale === 'ja'
-    ? 'ログイン・アップロード・解析送信・AIを使わず、ブラウザ内だけで動くAnki負荷計画ツールです。'
-    : 'A browser-only, bilingual Anki workload and backlog planning tool. No login, uploads, analytics, or AI.'
+    ? 'ログイン・アップロード・backend・AIを使わず、ブラウザ内で動くAnki負荷計画ツールです。'
+    : 'A browser-only, bilingual Anki workload and backlog planning tool. No login, uploads, backend, or AI.'
   equal(await page.locator('meta[name="description"]').getAttribute('content'), expectedDescription, `Meta description is wrong for ${locale}/${appPage}.`)
   const removedSourceLabel = locale === 'ja' ? 'ソースを見る' : 'View source'
   equal(await page.getByRole('link', { name: removedSourceLabel, exact: true }).count(), 0, `The removed source link is visible on ${locale}/${appPage}.`)
@@ -899,11 +899,18 @@ function localDate(offset) {
   return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`
 }
 
-function isAllowedRuntimeUrl(value) {
+function isAllowedRuntimeRequest(request) {
   try {
+    const value = request.url()
     const url = new URL(value)
     if (['data:', 'blob:', 'about:'].includes(url.protocol)) return true
-    if (['http:', 'https:'].includes(url.protocol)) return url.origin === allowedRuntimeOrigin
+    if (['http:', 'https:'].includes(url.protocol)) {
+      if (url.origin === allowedRuntimeOrigin) return true
+      return request.method() === 'GET'
+        && url.origin === 'https://static.cloudflareinsights.com'
+        && url.pathname === '/beacon.min.js'
+        && url.search === ''
+    }
     if (['ws:', 'wss:'].includes(url.protocol)) {
       const allowed = new URL(baseUrl)
       return url.hostname === allowed.hostname && url.port === allowed.port

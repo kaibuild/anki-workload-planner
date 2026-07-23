@@ -3,7 +3,7 @@ import type { Translation } from './types'
 export const ja = {
   meta: {
     documentTitle: 'Anki負荷プランナー',
-    description: 'ログイン・アップロード・解析送信・AIを使わず、ブラウザ内だけで動くAnki負荷計画ツールです。',
+    description: 'ログイン・アップロード・backend・AIを使わず、ブラウザ内で動くAnki負荷計画ツールです。',
     pageTitles: {
       plan: 'プラン | Anki負荷プランナー',
       trend: 'backlogの推移 | Anki負荷プランナー',
@@ -360,9 +360,9 @@ export const ja = {
     heading: 'プライバシーと制限事項',
     localHeading: 'ローカルで完結する設計',
     localBody:
-      '入力値とsnapshotは、localStorageを使ってこのブラウザにのみ保存されます。アップロードや外部送信は行いません。',
+      '入力値とsnapshotは、localStorageを使ってこのブラウザにのみ保存されます。アップロードされず、アクセス解析の通信にも含まれません。',
     connectionBody:
-      'このツールには、Ankiログイン、ファイルアップロード、backend、analytics、telemetry、AIサービスはありません。',
+      'このツールには、Ankiログイン、ファイルアップロード、backend、AIサービスはありません。本番サイトでは、ページ閲覧数と表示性能の集計にCloudflare Web Analyticsを使用します。計画の入力値、snapshot、メモ、書き出し内容は送信しません。',
     limitationsHeading: '重要な制限事項',
     limitationsBody:
       '表示内容は負荷の概算であり、schedulerの正確な予測ではありません。このバージョンでは、reset、reschedule、forget、bury、filtered deck、FSRS変更、learning/relearning stepsの正確な結果は再現しません。',

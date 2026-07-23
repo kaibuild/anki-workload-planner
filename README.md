@@ -53,11 +53,13 @@ Anki Workload Planner turns manually entered workload numbers into transparent e
 - It does not identify which individual cards should be rewritten, suspended, or converted to another card type.
 - It does not analyze card content or provide tutoring, medical, or exam-content advice.
 - It does not use an LLM or any AI API.
-- It has no backend, authentication, cloud database, analytics, telemetry, advertising, or payments.
+- It has no backend, authentication, cloud database, advertising, or payments.
 
 ### Privacy and local-only data model
 
-All calculations run in the browser. User-entered data is stored only in browser `localStorage`; the application does not transmit it to a server. There are no runtime CDN assets, external fonts, remote icons, analytics calls, or tracking pixels.
+All calculations run in the browser. User-entered data is stored only in browser `localStorage`; it is not uploaded or included in analytics requests. There are no external fonts, remote icons, advertising SDKs, or custom tracking events.
+
+The production site uses Cloudflare Web Analytics to count aggregate page views and measure page performance. Cloudflare's automatically injected beacon receives the current page path, referrer, broad device/browser information, country, navigation type, and timing metrics. It does not receive planner inputs, snapshots, optional notes, `localStorage` contents, or exported plans. Cloudflare states that Web Analytics does not track individual users across its customers' sites. See [PRIVACY.md](./PRIVACY.md) for the complete disclosure.
 
 The versioned keys are:
 
@@ -229,7 +231,7 @@ The app can be served from a static host that rewrites nested application routes
 - GitHub-integrated automatic deployments: enabled
 - Build command: `npm run build`
 - Output directory: `dist`
-- Runtime: static assets only; no Pages Functions, Workers, backend, analytics, or paid Cloudflare resource
+- Runtime: static assets plus Cloudflare Web Analytics; no Pages Functions, Workers, backend, or paid Cloudflare resource
 
 Future pushes to `main` automatically build and publish the static site on the generated `*.pages.dev` domain. No custom domain or paid hosting feature is required.
 
@@ -306,11 +308,13 @@ Anki負荷プランナーは、手入力した数値を基に、上記4点を透
 - 書き直すべきカード、停止すべきカード、別形式に変えるべきカードを個別に判定しません。
 - カード内容の分析、個別指導、医療・試験内容への助言は行いません。
 - LLMやAI APIを使用しません。
-- backend、認証、クラウドDB、analytics、telemetry、広告、決済はありません。
+- backend、認証、クラウドDB、広告、決済はありません。
 
 ### プライバシーとローカル保存
 
-すべての計算はブラウザ内で行われます。入力データはブラウザの`localStorage`にだけ保存され、アプリがサーバーへ送信することはありません。実行時CDN、外部フォント、リモートアイコン、analytics通信、tracking pixelも使用しません。
+すべての計算はブラウザ内で行われます。入力データはブラウザの`localStorage`にだけ保存され、アップロードやアクセス解析の通信には含まれません。外部フォント、リモートアイコン、広告SDK、独自の利用イベント追跡は使用しません。
+
+本番サイトでは、閲覧数とページ表示性能を集計するためCloudflare Web Analyticsを使用します。Cloudflareが自動挿入するbeaconは、現在のページpath、参照元、端末・browserの大まかな情報、国、navigation type、performance timingを受信します。計画の入力値、snapshot、任意メモ、`localStorage`の内容、書き出し内容は送信しません。Cloudflareは、Web Analyticsで顧客サイトをまたいだ個人ユーザーの追跡を行わないと説明しています。詳しくは[PRIVACY.md](./PRIVACY.md)をご覧ください。
 
 使用するversioned keyは次のとおりです。
 
@@ -436,7 +440,7 @@ npm run qa:brave
 
 本番環境は[https://anki-workload-planner.pages.dev](https://anki-workload-planner.pages.dev)で公開しています。
 
-- **Cloudflare Pages Free（本番）：** GitHubの`main` branchと連携し、push後に`npm run build`を実行して`dist/`を自動配信します。生成された`*.pages.dev` URLだけを使用し、Pages Functions、Workers、backend、analytics、有料Cloudflare resourceは使用しません。
+- **Cloudflare Pages Free（本番）：** GitHubの`main` branchと連携し、push後に`npm run build`を実行して`dist/`を自動配信します。生成された`*.pages.dev` URLだけを使用し、Cloudflare Web Analyticsを有効にしています。Pages Functions、Workers、backend、有料Cloudflare resourceは使用しません。
 - **Vercel：** framework presetはVite、build commandは`npm run build`、output directoryは`dist`。
 - **GitHub Pages：** 現在のbuildはroot/custom domain向けです。repository subpathで配信する場合は、Vite `base`とSPA fallbackをそのpathに合わせてください。
 

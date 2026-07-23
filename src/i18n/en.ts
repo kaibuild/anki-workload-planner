@@ -1,7 +1,7 @@
 export const en = {
   meta: {
     documentTitle: 'Anki Workload Planner',
-    description: 'A browser-only, bilingual Anki workload and backlog planning tool. No login, uploads, analytics, or AI.',
+    description: 'A browser-only, bilingual Anki workload and backlog planning tool. No login, uploads, backend, or AI.',
     pageTitles: {
       plan: 'Plan | Anki Workload Planner',
       trend: 'Backlog trend | Anki Workload Planner',
@@ -358,9 +358,9 @@ export const en = {
     heading: 'Privacy and limitations',
     localHeading: 'Local by design',
     localBody:
-      'Inputs and snapshots are stored only in this browser using localStorage. Nothing is uploaded or transmitted.',
+      'Inputs and snapshots are stored only in this browser using localStorage. They are not uploaded or included in analytics requests.',
     connectionBody:
-      'This tool has no Anki login, file upload, backend, analytics, telemetry, or AI service.',
+      'This tool has no Anki login, file upload, backend, or AI service. The production site uses Cloudflare Web Analytics for aggregate page-view and performance metrics; planner inputs, snapshots, notes, and exports are not sent.',
     limitationsHeading: 'Important limitations',
     limitationsBody:
       'These are workload estimates, not exact scheduler predictions. This version does not model the precise results of resetting, rescheduling, forgetting, burying, filtered decks, FSRS changes, or learning/relearning steps.',
