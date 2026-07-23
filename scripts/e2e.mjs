@@ -906,10 +906,17 @@ function isAllowedRuntimeRequest(request) {
     if (['data:', 'blob:', 'about:'].includes(url.protocol)) return true
     if (['http:', 'https:'].includes(url.protocol)) {
       if (url.origin === allowedRuntimeOrigin) return true
-      return request.method() === 'GET'
+      return (
+        request.method() === 'GET'
         && url.origin === 'https://static.cloudflareinsights.com'
         && url.pathname === '/beacon.min.js'
         && url.search === ''
+      ) || (
+        request.method() === 'POST'
+        && url.origin === 'https://cloudflareinsights.com'
+        && url.pathname === '/cdn-cgi/rum'
+        && url.search === ''
+      )
     }
     if (['ws:', 'wss:'].includes(url.protocol)) {
       const allowed = new URL(baseUrl)

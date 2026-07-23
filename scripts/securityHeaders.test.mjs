@@ -8,11 +8,11 @@ const csp = headers
   .find((line) => line.trim().startsWith('Content-Security-Policy:'))
 
 describe('production security headers', () => {
-  it('allows only the reviewed Cloudflare Web Analytics script and same-origin beacon endpoint', () => {
+  it('allows only the reviewed Cloudflare Web Analytics script and beacon endpoint', () => {
     expect(csp).toContain(
       "script-src 'self' https://static.cloudflareinsights.com/beacon.min.js",
     )
-    expect(csp).toContain("connect-src 'self'")
+    expect(csp).toContain("connect-src 'self' https://cloudflareinsights.com")
     expect(csp).not.toContain('script-src *')
     expect(csp).not.toContain('connect-src *')
   })
