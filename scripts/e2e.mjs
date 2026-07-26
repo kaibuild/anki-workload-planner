@@ -14,6 +14,7 @@ const baseUrl = validateBaseUrl(process.env.QA_BASE_URL ?? 'http://127.0.0.1:417
 const allowedRuntimeOrigin = new URL(baseUrl).origin
 const artifactsDir = resolve(process.env.QA_ARTIFACT_DIR ?? 'artifacts/qa')
 const screenshotsDir = join(artifactsDir, 'screenshots')
+const hardCardScreenshotsDir = join(screenshotsDir, 'hard-card-feedback')
 const harPath = join(artifactsDir, 'copied-brave-network.har')
 const axePath = join(artifactsDir, 'axe-results.json')
 const profileParent = process.env.BRAVE_QA_COPY_ROOT
@@ -22,6 +23,7 @@ const profileParent = process.env.BRAVE_QA_COPY_ROOT
 const headless = process.env.BRAVE_QA_HEADED !== '1'
 
 await mkdir(screenshotsDir, { recursive: true })
+await mkdir(hardCardScreenshotsDir, { recursive: true })
 
 const results = []
 const profiles = new Set()
@@ -236,6 +238,153 @@ try {
     })
   })
 
+  await test('Hard-card workload is explicit, persistent, localized, and exportable on mobile', async () => {
+    const profile = await makeProfile()
+    await withBrowser({
+      locale: 'en-US',
+      profile,
+      keepProfile: true,
+      viewport: { width: 390, height: 844 },
+    }, async ({ context, page }) => {
+      await context.grantPermissions(['clipboard-read', 'clipboard-write'], { origin: new URL(baseUrl).origin })
+      await goto(page, '/en/plan')
+      await clearProductData(page)
+      await page.reload({ waitUntil: 'load' })
+      const historyBeforeInputs = await page.evaluate(() => history.length)
+
+      await fillPlanner(page, {
+        overdueBacklog: 3940,
+        typicalDailyReviews: 50,
+        dailyMinutes: 180,
+        averageSecondsPerReview: 10,
+        newCardsPerDay: 0,
+        hardCardCount: 500,
+        hardCardReviewsPerDay: 0,
+        extraSecondsPerHardReview: 7,
+        targetDate: '2026-08-10',
+      })
+      equal(await page.evaluate(() => history.length), historyBeforeInputs, 'Numeric input changes created browser-history entries.')
+
+      const hardCardGroup = page.locator('fieldset').filter({ hasText: 'Hard-card workload' })
+      const hardCardImpactStatus = page.locator('#planner-hard-card-impact')
+      assert((await hardCardGroup.innerText()).includes('Used in estimate'), 'Calculation inputs are not visibly labeled.')
+      assert((await hardCardGroup.innerText()).includes('Context only'), 'Known hard-card count is not visibly context-only.')
+      assert((await hardCardGroup.innerText()).includes('does not affect the estimate by itself'), 'Context-only explanation is missing.')
+      assert((await hardCardImpactStatus.innerText()).includes('No hard-card time is currently included'), 'Zero-overhead state does not explain the missing daily-review input.')
+      const zeroBreakdown = await page.locator('section[aria-labelledby="breakdown-heading"]').innerText()
+      assert(zeroBreakdown.includes('Known hard-card count is context only'), 'Result breakdown does not explain why known count alone has no effect.')
+
+      await fillPlanner(page, {
+        hardCardReviewsPerDay: 100,
+        extraSecondsPerHardReview: 7,
+      })
+      await page.waitForFunction(() => document.querySelector('#planner-hard-card-impact')?.textContent?.includes('11.7'))
+      assert((await hardCardImpactStatus.innerText()).includes('11.7 min/day'), 'Live hard-card overhead is not 11.7 min/day.')
+
+      const resultText = await page.locator('section[aria-labelledby="result-heading"]').innerText()
+      assert(resultText.includes('5 study days'), 'One-pass estimate did not update to 5 study days.')
+      const breakdown = page.locator('section[aria-labelledby="breakdown-heading"]')
+      const breakdownText = await breakdown.innerText()
+      for (const expected of [
+        'Normal daily reviews',
+        '8.3 min/day',
+        'Estimated hard-card overhead',
+        '11.7 min/day',
+        'Total recurring daily workload',
+        '20 min/day',
+        'Time available for backlog reduction',
+        '160 min/day',
+        'Fewer backlog cards per day',
+        '70 cards/day',
+        '5 study days (without hard-card overhead: 4 study days)',
+      ]) {
+        assert(breakdownText.includes(expected), `Hard-card breakdown is missing: ${expected}`)
+      }
+      await assertNoHorizontalOverflow(page, '390x844 English hard-card flow')
+      await assertNoClippedContent(breakdown, 'English hard-card breakdown')
+      await screenshotHardCardElement(hardCardGroup, 'mobile-en-advanced-values.png')
+      await screenshotHardCardElement(breakdown, 'mobile-en-workload-breakdown.png')
+
+      const advancedSettings = page.locator('#planner-dueToday').locator('xpath=ancestor::details[1]')
+      await advancedSettings.locator('summary').click()
+      const collapsedSummary = await advancedSettings.locator('summary').innerText()
+      assert(collapsedSummary.includes('Hard cards: 11.7 min/day'), 'Collapsed Advanced summary hides active hard-card overhead.')
+
+      await page.getByRole('link', { name: 'Backlog trend', exact: true }).click()
+      await waitForPath(page, '/en/trend')
+      await page.goBack()
+      await waitForPath(page, '/en/plan')
+      equal(await page.locator('#planner-hardCardReviewsPerDay').inputValue(), '100', 'Hard-card reviews were lost after browser Back.')
+      await page.goForward()
+      await waitForPath(page, '/en/trend')
+      await page.getByRole('link', { name: 'Plan', exact: true }).click()
+      await waitForPath(page, '/en/plan')
+
+      await page.getByRole('button', { name: '日本語', exact: true }).click()
+      await waitForPath(page, '/ja/plan')
+      equal(await page.locator('#planner-hardCardReviewsPerDay').inputValue(), '100', 'Hard-card reviews were lost after switching to Japanese.')
+      await page.reload({ waitUntil: 'load' })
+      equal(await page.locator('#planner-hardCardReviewsPerDay').inputValue(), '100', 'Hard-card reviews were lost after Japanese reload.')
+      await openAdvanced(page)
+      const japaneseGroup = page.locator('fieldset').filter({ hasText: '難しいカードの負荷' })
+      assert((await japaneseGroup.innerText()).includes('推定に使用'), 'Japanese calculation-input label is missing.')
+      assert((await japaneseGroup.innerText()).includes('参考情報のみ'), 'Japanese context-only label is missing.')
+      assert((await page.locator('#planner-hard-card-impact').innerText()).includes('11.7 分/日'), 'Japanese live hard-card overhead is missing.')
+      const japaneseBreakdown = page.locator('section[aria-labelledby="breakdown-heading"]')
+      const japaneseBreakdownText = await japaneseBreakdown.innerText()
+      assert(japaneseBreakdownText.includes('継続的な1日の総負荷'), 'Japanese total recurring workload is missing.')
+      assert(japaneseBreakdownText.includes('20 分/日'), 'Japanese recurring total is not 20 minutes/day.')
+      assert(japaneseBreakdownText.includes('70 枚/日'), 'Japanese hard-card capacity effect is not 70 cards/day.')
+      await assertNoHorizontalOverflow(page, '390x844 Japanese hard-card flow')
+      await assertNoClippedContent(japaneseBreakdown, 'Japanese hard-card breakdown')
+      await screenshotHardCardElement(japaneseGroup, 'mobile-ja-advanced-values.png')
+      await screenshotHardCardElement(japaneseBreakdown, 'mobile-ja-workload-breakdown.png')
+
+      const japaneseMarkdown = await downloadText(page, 'プランをMarkdownでダウンロード')
+      assert(japaneseMarkdown.content.includes('## 難しいカードの負荷'), 'Japanese Markdown lacks the hard-card section.')
+      assert(japaneseMarkdown.content.includes('難しいカードの推定追加時間: 11.7 分/日'), 'Japanese Markdown omits applied overhead.')
+      assert(japaneseMarkdown.content.includes('継続的な1日の負荷: 20 分/日'), 'Japanese Markdown omits total recurring workload.')
+
+      await page.getByRole('button', { name: 'English', exact: true }).click()
+      await waitForPath(page, '/en/plan')
+      await page.getByRole('button', { name: 'Copy plan as text', exact: true }).click()
+      const clipboard = await page.evaluate(() => navigator.clipboard.readText())
+      assert(clipboard.includes('## Hard-card workload'), 'Clipboard export lacks the English hard-card section.')
+      assert(clipboard.includes('Estimated hard-card overhead: 11.7 min/day'), 'Clipboard export omits applied overhead.')
+      const englishMarkdown = await downloadText(page, 'Download plan as Markdown')
+      assert(englishMarkdown.content.includes('Backlog reduction per day: 960 cards/day'), 'English Markdown does not include the 960-card capacity.')
+      assert(englishMarkdown.content.includes('5 study days (without hard-card overhead: 4 study days)'), 'English Markdown omits the one-day hard-card effect.')
+      await screenshotHardCardElement(
+        page.locator('section[aria-labelledby="export-heading"]'),
+        'mobile-en-export.png',
+      )
+
+      await page.setViewportSize({ width: 1440, height: 900 })
+      await screenshotHardCardElement(
+        page.locator('section[aria-labelledby="breakdown-heading"]'),
+        'desktop-en-hard-card-impact.png',
+      )
+      await page.getByRole('button', { name: '日本語', exact: true }).click()
+      await waitForPath(page, '/ja/plan')
+      await screenshotHardCardElement(
+        page.locator('section[aria-labelledby="breakdown-heading"]'),
+        'desktop-ja-hard-card-impact.png',
+      )
+    })
+
+    await withBrowser({
+      locale: 'en-US',
+      profile,
+      viewport: { width: 430, height: 932 },
+    }, async ({ page }) => {
+      await goto(page, '/')
+      await assertLocalizedPage(page, 'ja', 'plan')
+      equal(await page.locator('#planner-hardCardCount').inputValue(), '500', 'Known hard-card count was lost after reopening the browser profile.')
+      equal(await page.locator('#planner-hardCardReviewsPerDay').inputValue(), '100', 'Hard-card reviews were lost after reopening the browser profile.')
+      equal(await page.locator('#planner-extraSecondsPerHardReview').inputValue(), '7', 'Extra hard-review seconds were lost after reopening the browser profile.')
+    })
+  })
+
   await test('Invalid planner inputs are explained without unstable results', async () => {
     await withBrowser({ locale: 'en-US', viewport: { width: 1280, height: 800 } }, async ({ page }) => {
       await goto(page, '/en/plan')
@@ -403,6 +552,11 @@ try {
   await test('Responsive layouts, touch targets, and 200% effective zoom', async () => {
     await withBrowser({ locale: 'en-US', viewport: { width: 1440, height: 900 } }, async ({ context, page }) => {
       await goto(page, '/en/plan')
+      await fillPlanner(page, {
+        hardCardCount: 500,
+        hardCardReviewsPerDay: 100,
+        extraSecondsPerHardReview: 7,
+      })
       const viewports = [
         [320, 568],
         [360, 800],
@@ -478,7 +632,18 @@ try {
       await page.waitForFunction(() => document.activeElement?.id === 'main-content')
       equal(await page.evaluate(() => document.activeElement?.id), 'main-content', 'The skip link did not move focus to main content.')
       await openAdvanced(page)
+      await fillPlanner(page, {
+        hardCardCount: 500,
+        hardCardReviewsPerDay: 100,
+        extraSecondsPerHardReview: 7,
+      })
       await runAxe(page, 'en/plan advanced-open')
+      await page.getByRole('button', { name: '日本語', exact: true }).click()
+      await waitForPath(page, '/ja/plan')
+      await openAdvanced(page)
+      await runAxe(page, 'ja/plan hard-card advanced-open')
+      await page.getByRole('button', { name: 'English', exact: true }).click()
+      await waitForPath(page, '/en/plan')
       await openLocalDataControls(page)
       const resetButton = page.getByRole('button', { name: 'Reset plan', exact: true })
       await resetButton.click()
@@ -507,6 +672,13 @@ try {
       'planned-card-addition.png',
       'language-switch.png',
       'validation-error.png',
+      'hard-card-feedback/mobile-en-advanced-values.png',
+      'hard-card-feedback/mobile-en-workload-breakdown.png',
+      'hard-card-feedback/mobile-en-export.png',
+      'hard-card-feedback/mobile-ja-advanced-values.png',
+      'hard-card-feedback/mobile-ja-workload-breakdown.png',
+      'hard-card-feedback/desktop-en-hard-card-impact.png',
+      'hard-card-feedback/desktop-ja-hard-card-impact.png',
     ]
     for (const name of required) {
       const info = await stat(join(screenshotsDir, name)).catch(() => null)
@@ -825,11 +997,29 @@ async function downloadText(page, buttonName) {
 }
 
 async function assertNoHorizontalOverflow(page, label) {
-  const dimensions = await page.evaluate(() => ({
-    viewport: document.documentElement.clientWidth,
-    html: document.documentElement.scrollWidth,
-    body: document.body.scrollWidth,
-  }))
+  const dimensions = await page.evaluate(() => {
+    const viewport = document.documentElement.clientWidth
+    const offenders = [...document.querySelectorAll('*')]
+      .map((element) => {
+        const box = element.getBoundingClientRect()
+        return {
+          element: `${element.tagName.toLowerCase()}${element.id ? `#${element.id}` : ''}`,
+          left: Math.round(box.left),
+          right: Math.round(box.right),
+          width: Math.round(box.width),
+          text: element.textContent?.trim().replace(/\s+/g, ' ').slice(0, 80),
+        }
+      })
+      .filter((item) => item.left < -1 || item.right > viewport + 1)
+      .sort((left, right) => right.right - left.right)
+      .slice(0, 6)
+    return {
+      viewport,
+      html: document.documentElement.scrollWidth,
+      body: document.body.scrollWidth,
+      offenders,
+    }
+  })
   assert(dimensions.html <= dimensions.viewport + 1 && dimensions.body <= dimensions.viewport + 1,
     `${label} has page-level horizontal overflow: ${JSON.stringify(dimensions)}`)
 }
@@ -850,6 +1040,20 @@ async function assertTouchTargets(page, label) {
       .filter((item) => item.width < 43 || item.height < 43)
   })
   equal(undersized.length, 0, `${label} has undersized touch targets: ${JSON.stringify(undersized.slice(0, 8))}`)
+}
+
+async function assertNoClippedContent(locator, label) {
+  const dimensions = await locator.evaluate((element) => ({
+    clientHeight: element.clientHeight,
+    scrollHeight: element.scrollHeight,
+    clientWidth: element.clientWidth,
+    scrollWidth: element.scrollWidth,
+  }))
+  assert(
+    dimensions.scrollHeight <= dimensions.clientHeight + 1 &&
+      dimensions.scrollWidth <= dimensions.clientWidth + 1,
+    `${label} clips content: ${JSON.stringify(dimensions)}`,
+  )
 }
 
 async function runAxe(page, label) {
@@ -886,6 +1090,26 @@ async function screenshot(page, name, options = {}) {
     })
   } finally {
     await page.evaluate(() => {
+      const skipLink = document.querySelector('.skip-link')
+      if (skipLink instanceof HTMLElement) skipLink.style.removeProperty('display')
+    })
+  }
+}
+
+async function screenshotHardCardElement(locator, name) {
+  await locator.scrollIntoViewIfNeeded()
+  await locator.page().evaluate(() => {
+    if (document.activeElement instanceof HTMLElement) document.activeElement.blur()
+    const skipLink = document.querySelector('.skip-link')
+    if (skipLink instanceof HTMLElement) skipLink.style.display = 'none'
+  })
+  try {
+    await locator.screenshot({
+      path: join(hardCardScreenshotsDir, name),
+      animations: 'disabled',
+    })
+  } finally {
+    await locator.page().evaluate(() => {
       const skipLink = document.querySelector('.skip-link')
       if (skipLink instanceof HTMLElement) skipLink.style.removeProperty('display')
     })

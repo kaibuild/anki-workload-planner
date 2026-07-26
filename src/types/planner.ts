@@ -52,6 +52,12 @@ export type PlannedCardsScenario = {
   metrics: PlanMetrics
 }
 
+export type HardCardImpact = {
+  backlogCapacityReductionCardsPerDay: number
+  onePassDaysWithoutOverhead: number | null
+  onePassDaysDifference: number | null
+}
+
 export type PlannerResult = {
   current: PlanMetrics
   pauseNewCards: PlanMetrics
@@ -60,6 +66,7 @@ export type PlannerResult = {
   /** What-if metrics after removing potentially triaged cards from the planning scope. */
   reducedScope: PlanMetrics
   plannedCards: PlannedCardsScenario
+  hardCardImpact: HardCardImpact
   validationErrors: ValidationError[]
 }
 

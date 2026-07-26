@@ -54,6 +54,20 @@ describe('translation dictionaries', () => {
     expect(ja.privacy.connectionBody).toContain('Cloudflare Web Analytics')
     expect(ja.privacy.connectionBody).toContain('計画の入力値、snapshot、メモ、書き出し内容は送信しません')
   })
+
+  it('distinguishes hard-card calculation inputs from context-only count in both locales', () => {
+    expect(en.form.fields.hardCardCount.helper).toContain('does not affect the estimate')
+    expect(en.form.fields.hardCardReviewsPerDay.helper).toContain('Used in the estimate')
+    expect(en.form.fields.extraSecondsPerHardReview.helper).toContain('Used in the estimate')
+    expect(en.form.hardCards.previewMissingReviews).toContain('No hard-card time is currently included')
+    expect(en.export.hardCardNoDailyOverheadCountContext).toContain('recorded as context')
+
+    expect(ja.form.fields.hardCardCount.helper).toContain('単独では負荷の計算に使用しません')
+    expect(ja.form.fields.hardCardReviewsPerDay.helper).toContain('推定に使用')
+    expect(ja.form.fields.extraSecondsPerHardReview.helper).toContain('推定に使用')
+    expect(ja.form.hardCards.previewMissingReviews).toContain('追加時間は計算に含まれていません')
+    expect(ja.export.hardCardNoDailyOverheadCountContext).toContain('参考情報として記録')
+  })
 })
 
 describe('locale selection and persistence', () => {

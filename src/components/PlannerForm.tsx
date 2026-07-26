@@ -11,7 +11,17 @@ export type PlannerFormLabels = {
   demoPrompt: string
   demoLoaded: string
   demos: Record<DemoId, string>
-  fields: Record<keyof Omit<PlannerInputs, 'daysOff'>, { label: string; helper?: string; unit?: string }>
+  fields: Record<keyof Omit<PlannerInputs, 'daysOff'>, { label: string; helper?: string; unit?: string; badge?: string }>
+  hardCards: {
+    heading: string
+    description: string
+    previewLabel: string
+    previewMissingReviews: string
+    previewMissingExtraSeconds: string
+    collapsedIncluded: string
+    collapsedShort: string
+    minutesPerDay: string
+  }
   daysOff: string
   daysOffHelp: string
   weekdays: string[]
@@ -22,6 +32,7 @@ type PlannerFormProps = {
   inputs: PlannerInputs
   errors: ValidationError[]
   labels: PlannerFormLabels
+  locale: 'en' | 'ja'
   onChange: (inputs: PlannerInputs) => void
 }
 
@@ -34,26 +45,45 @@ const SIMPLE_FIELDS: Array<keyof Omit<PlannerInputs, 'daysOff'>> = [
   'targetDate',
 ]
 
-const ADVANCED_FIELDS: Array<keyof Omit<PlannerInputs, 'daysOff'>> = [
+const ADVANCED_CONTEXT_FIELDS: Array<keyof Omit<PlannerInputs, 'daysOff'>> = [
   'dueToday',
   'schedulerQueueNow',
-  'hardCardCount',
+]
+
+const HARD_CARD_ESTIMATE_FIELDS: Array<keyof Omit<PlannerInputs, 'daysOff'>> = [
   'hardCardReviewsPerDay',
   'extraSecondsPerHardReview',
+]
+
+const ADVANCED_PLANNING_FIELDS: Array<keyof Omit<PlannerInputs, 'daysOff'>> = [
   'newCardReviewEquivalent',
   'plannedAdditionalCards',
   'plannedAdditionalCardsDays',
   'potentiallyTriagedCards',
 ]
 
-export function PlannerForm({ inputs, errors, labels, onChange }: PlannerFormProps) {
+export function PlannerForm({ inputs, errors, labels, locale, onChange }: PlannerFormProps) {
   const [demo, setDemo] = useState<DemoId>('moderate')
   const [demoLoaded, setDemoLoaded] = useState(false)
+  const decimal = new Intl.NumberFormat(locale, { maximumFractionDigits: 1 })
+  const hardCardReviewsPerDay = validNonNegative(inputs.hardCardReviewsPerDay)
+  const extraSecondsPerHardReview = validNonNegative(inputs.extraSecondsPerHardReview)
+  const hardCardMinutesPerDay =
+    (hardCardReviewsPerDay * extraSecondsPerHardReview) / 60
+  const hardCardPreview = hardCardMinutesPerDay > 0
+    ? `${labels.hardCards.previewLabel}: ${decimal.format(hardCardMinutesPerDay)} ${labels.hardCards.minutesPerDay}`
+    : hardCardReviewsPerDay <= 0
+      ? labels.hardCards.previewMissingReviews
+      : labels.hardCards.previewMissingExtraSeconds
   const update = <K extends keyof PlannerInputs>(key: K, value: PlannerInputs[K]) => {
     onChange({ ...inputs, [key]: value })
   }
-  const renderField = (field: keyof Omit<PlannerInputs, 'daysOff'>) => (
+  const renderField = (
+    field: keyof Omit<PlannerInputs, 'daysOff'>,
+    describedBy?: string,
+  ) => (
     <PlannerField
+      describedBy={describedBy}
       errors={errors.filter((error) => error.field === field).map((error) => labels.errors[error.code])}
       field={field}
       key={field}
@@ -72,7 +102,7 @@ export function PlannerForm({ inputs, errors, labels, onChange }: PlannerFormPro
       </div>
 
       <div className="mt-5 grid gap-x-4 gap-y-4 sm:grid-cols-2 lg:grid-cols-1">
-        {SIMPLE_FIELDS.map(renderField)}
+        {SIMPLE_FIELDS.map((field) => renderField(field))}
       </div>
 
       <details className="group quiet-surface mt-6 overflow-hidden">
@@ -93,12 +123,52 @@ export function PlannerForm({ inputs, errors, labels, onChange }: PlannerFormPro
       </details>
 
       <details className="group mt-6 border-t border-slate-200 pt-2">
-        <summary className="-mx-2 flex min-h-12 cursor-pointer list-none items-center justify-between gap-3 rounded-xl px-3 py-3 text-sm font-semibold text-slate-800 transition hover:bg-slate-50">
-          {labels.advanced}
-          <span aria-hidden="true" className="grid h-7 w-7 place-items-center rounded-lg bg-slate-100 text-lg leading-none text-slate-600 transition group-open:rotate-45">+</span>
+        <summary className="-mx-2 flex min-h-12 cursor-pointer list-none items-center justify-between gap-2 rounded-xl px-3 py-3 text-sm font-semibold text-slate-800 transition hover:bg-slate-50">
+          <span>{labels.advanced}</span>
+          <span className="flex min-w-0 max-w-[68%] items-center justify-end gap-2">
+            {hardCardMinutesPerDay > 0 ? (
+              <span
+                className="min-w-0 truncate rounded-full bg-amber-100 px-2.5 py-1 text-[0.68rem] font-semibold text-amber-950"
+                aria-label={`${labels.hardCards.collapsedIncluded}: ${decimal.format(hardCardMinutesPerDay)} ${labels.hardCards.minutesPerDay}`}
+              >
+                <span className="sm:hidden">{labels.hardCards.collapsedShort}: </span>
+                <span className="hidden sm:inline">{labels.hardCards.collapsedIncluded}: </span>
+                {decimal.format(hardCardMinutesPerDay)} {labels.hardCards.minutesPerDay}
+              </span>
+            ) : null}
+            <span aria-hidden="true" className="grid h-7 w-7 shrink-0 place-items-center rounded-lg bg-slate-100 text-lg leading-none text-slate-600 transition group-open:rotate-45">+</span>
+          </span>
         </summary>
         <div className="mt-2 rounded-2xl bg-slate-50/80 p-4">
-          <div className="grid gap-5">{ADVANCED_FIELDS.map(renderField)}</div>
+          <div className="grid gap-5">{ADVANCED_CONTEXT_FIELDS.map((field) => renderField(field))}</div>
+
+          <fieldset className="mt-6 min-w-0 rounded-xl border border-amber-200 bg-amber-50/60 p-4">
+            <legend className="px-1 text-sm font-semibold text-slate-900">{labels.hardCards.heading}</legend>
+            <p className="mt-1 text-xs leading-5 text-slate-600">{labels.hardCards.description}</p>
+            <div className="mt-4 grid gap-5">
+              {HARD_CARD_ESTIMATE_FIELDS.map((field) => renderField(field, 'planner-hard-card-impact'))}
+            </div>
+            <div
+              className={`mt-4 rounded-lg border px-3.5 py-3 text-sm font-semibold leading-6 ${
+                hardCardMinutesPerDay > 0
+                  ? 'border-amber-300 bg-white text-amber-950'
+                  : 'border-slate-200 bg-white text-slate-700'
+              }`}
+              id="planner-hard-card-impact"
+              role="status"
+              aria-atomic="true"
+              aria-live="polite"
+            >
+              {hardCardPreview}
+            </div>
+            <div className="mt-5 border-t border-amber-200 pt-5">
+              {renderField('hardCardCount')}
+            </div>
+          </fieldset>
+
+          <div className="mt-6 grid gap-5">
+            {ADVANCED_PLANNING_FIELDS.map((field) => renderField(field))}
+          </div>
           <fieldset className="mt-5">
             <legend className="text-sm font-semibold text-slate-800">{labels.daysOff}</legend>
             <p className="mt-1 text-xs leading-5 text-slate-500" id="planner-daysOff-help">{labels.daysOffHelp}</p>
@@ -137,12 +207,13 @@ export function PlannerForm({ inputs, errors, labels, onChange }: PlannerFormPro
 type FieldProps = {
   field: keyof Omit<PlannerInputs, 'daysOff'>
   value: number | string
-  meta: { label: string; helper?: string; unit?: string }
+  meta: { label: string; helper?: string; unit?: string; badge?: string }
   errors: string[]
+  describedBy?: string
   onChange: (value: number | string) => void
 }
 
-function PlannerField({ field, value, meta, errors, onChange }: FieldProps) {
+function PlannerField({ field, value, meta, errors, describedBy, onChange }: FieldProps) {
   const id = `planner-${field}`
   const helpId = `${id}-help`
   const errorId = `${id}-error`
@@ -161,8 +232,15 @@ function PlannerField({ field, value, meta, errors, onChange }: FieldProps) {
   const displayValue = typeof value === 'number' && !Number.isFinite(value) ? '' : value
   return (
     <label className="block" htmlFor={id}>
-      <span className="flex items-baseline justify-between gap-2 text-sm font-medium leading-5 text-slate-800">
-        <span>{meta.label}</span>
+      <span className="flex flex-wrap items-start justify-between gap-x-2 gap-y-1 text-sm font-medium leading-5 text-slate-800">
+        <span className="min-w-0 flex-1">
+          <span>{meta.label}</span>
+          {meta.badge ? (
+            <span className="ml-2 inline-block rounded-full bg-white px-2 py-0.5 align-middle text-[0.65rem] font-semibold text-teal-800 ring-1 ring-inset ring-slate-200">
+              {meta.badge}
+            </span>
+          ) : null}
+        </span>
         {meta.unit ? <span className="shrink-0 text-[0.68rem] font-medium text-slate-500">{meta.unit}</span> : null}
       </span>
       <input
@@ -174,7 +252,7 @@ function PlannerField({ field, value, meta, errors, onChange }: FieldProps) {
         max={isDate ? undefined : maximum}
         inputMode={isDate ? undefined : 'decimal'}
         value={displayValue}
-        aria-describedby={[meta.helper ? helpId : '', errors.length ? errorId : ''].filter(Boolean).join(' ') || undefined}
+        aria-describedby={[meta.helper ? helpId : '', describedBy ?? '', errors.length ? errorId : ''].filter(Boolean).join(' ') || undefined}
         aria-invalid={errors.length > 0}
         onChange={(event) => {
           if (isDate) onChange(event.currentTarget.value)
@@ -185,4 +263,8 @@ function PlannerField({ field, value, meta, errors, onChange }: FieldProps) {
       {errors.length ? <span className="mt-1.5 block text-xs font-medium leading-5 text-rose-800" id={errorId}>{errors.join(' ')}</span> : null}
     </label>
   )
+}
+
+function validNonNegative(value: number): number {
+  return Number.isFinite(value) && value >= 0 ? value : 0
 }

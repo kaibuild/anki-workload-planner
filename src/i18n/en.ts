@@ -96,15 +96,17 @@ export const en = {
       },
       hardCardCount: {
         label: 'Known hard or leech cards',
-        helper: 'Cards you already know repeatedly fail or take much longer than normal.',
+        helper:
+          'Context only. This count does not affect the estimate by itself because it does not show how often you review these cards.',
       },
       hardCardReviewsPerDay: {
         label: 'Hard-card reviews per day',
-        helper: 'How many difficult-card reviews you typically encounter in one day.',
+        helper:
+          'Used in the estimate. Enter how many difficult-card reviews you encounter on a typical day.',
       },
       extraSecondsPerHardReview: {
         label: 'Extra seconds per hard review',
-        helper: 'Time beyond your normal review average.',
+        helper: 'Used in the estimate. Enter the extra time beyond your normal review average.',
       },
       newCardReviewEquivalent: {
         label: 'Estimated future review burden per new card',
@@ -128,6 +130,20 @@ export const en = {
         label: 'Days off',
         helper: 'Selected weekdays are excluded from the target-date plan.',
       },
+    },
+    hardCards: {
+      heading: 'Hard-card workload',
+      description:
+        'Known hard/leech card count does not affect the estimate by itself. To estimate the time impact, enter how many hard-card reviews you encounter on a typical day.',
+      usedInEstimate: 'Used in estimate',
+      contextOnly: 'Context only',
+      previewLabel: 'Estimated hard-card overhead',
+      previewMissingReviews:
+        'No hard-card time is currently included. Enter hard-card reviews per day to include this workload.',
+      previewMissingExtraSeconds:
+        'No hard-card time is currently included. Enter a positive number of extra seconds per hard review.',
+      collapsedIncluded: 'Hard-card overhead included',
+      collapsedShort: 'Hard cards',
     },
     weekdays: {
       monday: 'Monday',
@@ -210,10 +226,25 @@ export const en = {
     newCardBurdenHelp: 'Future review-equivalent demand created by the current new-card pace.',
     hardCardOverhead: 'Estimated hard-card overhead',
     hardCardOverheadHelp: 'Extra time spent beyond the normal average on difficult cards.',
+    hardCardNotIncluded:
+      'No hard-card time is currently included. Enter hard-card reviews per day to include this workload.',
+    hardCardCountContextOnly:
+      'Known hard-card count is context only. No daily overhead is included because hard-card reviews per day is zero.',
+    hardCardMissingExtraSeconds:
+      'No daily overhead is included because extra seconds per hard review is zero.',
     recurringTotal: 'Total recurring daily workload',
+    recurringTotalHelp: 'Includes normal reviews, estimated new-card burden, and hard-card overhead.',
     backlogTime: 'Time available for backlog reduction',
     backlogTimePositive: 'This time can be used for overdue cards.',
     backlogTimeNone: 'Recurring demand already uses or exceeds the daily limit.',
+    hardCardImpactHeading: 'Estimated hard-card impact',
+    hardCardImpactDescription:
+      'Compared with the same plan without hard-card overhead. This does not diagnose individual cards.',
+    hardCardAddedTime: 'Additional time per day',
+    hardCardReducedCapacity: 'Fewer backlog cards per day',
+    hardCardOnePass: 'One-pass estimate',
+    hardCardOnePassUnchanged: 'no whole-day change',
+    withoutHardCardOverhead: 'without hard-card overhead',
   },
   scenarios: {
     heading: 'Compare key adjustments',
@@ -334,7 +365,7 @@ export const en = {
     duplicateDate: 'Another snapshot already uses this date. Edit that snapshot instead.',
     noteTooLong: 'Keep the note within 2,000 characters.',
     deleted: 'Snapshot deleted.',
-    contextOnly: 'Due today and scheduler queue are shown for context and do not affect the trend.',
+    contextOnly: 'Due today, scheduler queue, and known hard-card count are context only and do not affect the backlog trend.',
     actions: 'Actions',
     edit: 'Edit',
     delete: 'Delete',
@@ -387,8 +418,8 @@ export const en = {
     targetHeading: '4. Target-date feasibility',
     targetBody: 'The planner excludes selected days off, then compares required daily time with the entered limit. Impossible values are never labeled feasible.',
     targetFormula: 'required time = recurring workload + required backlog pace',
-    contextHeading: 'Due today and scheduler queue are context only',
-    contextBody: 'Changing either value never changes genuine overdue backlog, trend, direction, or the one-pass calculation. Finishing the visible queue does not mean all Anki work is complete.',
+    contextHeading: 'Some advanced values are context only',
+    contextBody: 'Due today, scheduler queue, and known hard/leech card count do not change the estimate by themselves. Hard-card time uses hard-card reviews per day × extra seconds per hard review. Finishing the visible queue does not mean all Anki work is complete.',
   },
   export: {
     heading: 'Export your local plan',
@@ -409,6 +440,14 @@ export const en = {
     recommendationHeading: 'Recommended first adjustment',
     trendHeading: 'Backlog snapshots',
     generatedLocally: 'Generated locally in the browser. No data was uploaded.',
+    hardCardHeading: 'Hard-card workload',
+    usedInEstimate: 'Used in estimate',
+    contextOnly: 'Context only',
+    estimatedEffect: 'Estimated effect compared with no hard-card overhead',
+    hardCardNoDailyOverheadCountContext:
+      'Known hard-card count was recorded as context, but no daily hard-card overhead was included because hard-card reviews per day was zero.',
+    hardCardNoDailyOverhead:
+      'No daily hard-card overhead was included because one or both calculation inputs were zero.',
   },
   confirm: {
     deleteSnapshotTitle: 'Delete this snapshot?',
@@ -441,6 +480,7 @@ export const en = {
   common: {
     minutes: 'minutes',
     minutesShort: 'min',
+    minutesPerDay: 'min/day',
     seconds: 'seconds',
     secondsShort: 'sec',
     cards: 'cards',

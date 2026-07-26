@@ -58,6 +58,64 @@ describe('input persistence', () => {
     expect(loadStoredInputs(storage, TODAY)).toEqual(inputs)
   })
 
+  it('round-trips every hard-card field with non-default values', () => {
+    const storage = new MemoryStorage()
+    const inputs = {
+      ...getDefaultPlannerInputs(TODAY),
+      hardCardCount: 500,
+      hardCardReviewsPerDay: 100,
+      extraSecondsPerHardReview: 7.5,
+    }
+
+    expect(saveInputs(inputs, storage)).toBe(true)
+    expect(loadStoredInputs(storage, TODAY)).toMatchObject({
+      hardCardCount: 500,
+      hardCardReviewsPerDay: 100,
+      extraSecondsPerHardReview: 7.5,
+    })
+  })
+
+  it('preserves the last valid hard-card values while a numeric field is temporarily empty', () => {
+    const storage = new MemoryStorage()
+    const inputs = {
+      ...getDefaultPlannerInputs(TODAY),
+      hardCardCount: 500,
+      hardCardReviewsPerDay: 100,
+      extraSecondsPerHardReview: 7,
+    }
+    saveInputs(inputs, storage)
+
+    expect(saveInputs({
+      ...inputs,
+      hardCardReviewsPerDay: Number.NaN,
+      extraSecondsPerHardReview: Number.NaN,
+    }, storage)).toBe(true)
+    expect(loadStoredInputs(storage, TODAY)).toMatchObject({
+      hardCardCount: 500,
+      hardCardReviewsPerDay: 100,
+      extraSecondsPerHardReview: 7,
+    })
+  })
+
+  it('loads older partial v1 input records without dropping valid advanced values', () => {
+    const storage = new MemoryStorage()
+    storage.setItem(
+      STORAGE_KEYS.inputs,
+      JSON.stringify({
+        overdueBacklog: 3940,
+        hardCardCount: 500,
+        hardCardReviewsPerDay: 100,
+      }),
+    )
+
+    expect(loadStoredInputs(storage, TODAY)).toMatchObject({
+      overdueBacklog: 3940,
+      hardCardCount: 500,
+      hardCardReviewsPerDay: 100,
+      extraSecondsPerHardReview: 7,
+    })
+  })
+
   it('falls back safely when localStorage contains malformed JSON', () => {
     const storage = new MemoryStorage()
     storage.setItem(STORAGE_KEYS.inputs, '{ definitely not json')

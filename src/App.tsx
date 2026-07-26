@@ -251,10 +251,11 @@ function PageShell({
 
         {page === 'plan' ? (
           <div className="mx-auto grid max-w-[82rem] gap-5 px-4 pb-10 sm:px-6 lg:grid-cols-[minmax(20rem,22rem)_minmax(0,1fr)] lg:items-start lg:gap-6 lg:px-8">
-            <aside className="lg:sticky lg:top-4">
+            <aside className="min-w-0 lg:sticky lg:top-4">
               <PlannerForm
                 inputs={inputs}
                 errors={result.validationErrors}
+                locale={locale}
                 labels={{
                   heading: copy.form.heading,
                   description: copy.form.description,
@@ -265,6 +266,16 @@ function PageShell({
                   demoLoaded: copy.demo.loaded,
                   demos: { moderate: copy.demo.moderate, extreme: copy.demo.extreme, growing: copy.demo.growing, planned: copy.demo.plannedAddition },
                   fields: makeFieldLabels(copy),
+                  hardCards: {
+                    heading: copy.form.hardCards.heading,
+                    description: copy.form.hardCards.description,
+                    previewLabel: copy.form.hardCards.previewLabel,
+                    previewMissingReviews: copy.form.hardCards.previewMissingReviews,
+                    previewMissingExtraSeconds: copy.form.hardCards.previewMissingExtraSeconds,
+                    collapsedIncluded: copy.form.hardCards.collapsedIncluded,
+                    collapsedShort: copy.form.hardCards.collapsedShort,
+                    minutesPerDay: copy.common.minutesPerDay,
+                  },
                   daysOff: copy.form.fields.daysOff.label,
                   daysOffHelp: copy.form.fields.daysOff.helper,
                   weekdays: Object.values(copy.form.weekdays),
@@ -302,7 +313,14 @@ function PageShell({
                       days: copy.common.studyDays,
                     }}
                   />
-                  <WorkloadBreakdown metrics={result.current} locale={locale} labels={makeBreakdownLabels(copy)} />
+                  <WorkloadBreakdown
+                    hardCardCount={inputs.hardCardCount}
+                    hardCardReviewsPerDay={inputs.hardCardReviewsPerDay}
+                    impact={result.hardCardImpact}
+                    metrics={result.current}
+                    locale={locale}
+                    labels={makeBreakdownLabels(copy)}
+                  />
                   <ScenarioGrid inputs={inputs} result={result} locale={locale} labels={makeScenarioLabels(copy)} />
                 </>
               )}
@@ -415,9 +433,13 @@ function makeFieldLabels(copy: Copy) {
     averageSecondsPerReview: { ...field.averageSecondsPerReview, unit: copy.common.seconds },
     newCardsPerDay: field.newCardsPerDay,
     newCardReviewEquivalent: field.newCardReviewEquivalent,
-    hardCardCount: field.hardCardCount,
-    hardCardReviewsPerDay: field.hardCardReviewsPerDay,
-    extraSecondsPerHardReview: { ...field.extraSecondsPerHardReview, unit: copy.common.seconds },
+    hardCardCount: { ...field.hardCardCount, badge: copy.form.hardCards.contextOnly },
+    hardCardReviewsPerDay: { ...field.hardCardReviewsPerDay, badge: copy.form.hardCards.usedInEstimate },
+    extraSecondsPerHardReview: {
+      ...field.extraSecondsPerHardReview,
+      badge: copy.form.hardCards.usedInEstimate,
+      unit: copy.common.seconds,
+    },
     plannedAdditionalCards: field.plannedAdditionalCards,
     plannedAdditionalCardsDays: { ...field.plannedAdditionalCardsDays, unit: copy.common.days },
     potentiallyTriagedCards: field.potentiallyTriagedCards,
@@ -435,10 +457,24 @@ function makeBreakdownLabels(copy: Copy) {
     newCardsNote: copy.breakdown.newCardBurdenHelp,
     hardCards: copy.breakdown.hardCardOverhead,
     hardCardsNote: copy.breakdown.hardCardOverheadHelp,
+    hardCardsNotIncluded: copy.breakdown.hardCardNotIncluded,
+    hardCardsContextOnly: copy.breakdown.hardCardCountContextOnly,
+    hardCardsMissingExtraSeconds: copy.breakdown.hardCardMissingExtraSeconds,
+    recurringTotal: copy.breakdown.recurringTotal,
+    recurringTotalNote: copy.breakdown.recurringTotalHelp,
     backlogTime: copy.breakdown.backlogTime,
     backlogTimePositive: copy.breakdown.backlogTimePositive,
     backlogTimeNegative: copy.breakdown.backlogTimeNone,
-    minutesPerDay: copy.common.minutesShort,
+    hardCardImpactHeading: copy.breakdown.hardCardImpactHeading,
+    hardCardImpactDescription: copy.breakdown.hardCardImpactDescription,
+    hardCardAddedTime: copy.breakdown.hardCardAddedTime,
+    hardCardReducedCapacity: copy.breakdown.hardCardReducedCapacity,
+    hardCardOnePass: copy.breakdown.hardCardOnePass,
+    hardCardOnePassUnchanged: copy.breakdown.hardCardOnePassUnchanged,
+    withoutHardCardOverhead: copy.breakdown.withoutHardCardOverhead,
+    minutesPerDay: copy.common.minutesPerDay,
+    cardsPerDay: copy.common.cardsPerDay,
+    days: copy.common.studyDays,
   }
 }
 
@@ -527,6 +563,20 @@ function makeExportLabels(copy: Copy): ExportLabels {
     averageSeconds: copy.form.fields.averageSecondsPerReview.label,
     newCardsPerDay: copy.form.fields.newCardsPerDay.label,
     targetDate: copy.form.fields.targetDate.label,
+    hardCardHeading: copy.export.hardCardHeading,
+    hardCardCount: copy.form.fields.hardCardCount.label,
+    hardCardReviewsPerDay: copy.form.fields.hardCardReviewsPerDay.label,
+    extraSecondsPerHardReview: copy.form.fields.extraSecondsPerHardReview.label,
+    hardCardOverhead: copy.breakdown.hardCardOverhead,
+    hardCardAddedTime: copy.breakdown.hardCardAddedTime,
+    hardCardReducedCapacity: copy.breakdown.hardCardReducedCapacity,
+    usedInEstimate: copy.export.usedInEstimate,
+    contextOnly: copy.export.contextOnly,
+    estimatedEffect: copy.export.estimatedEffect,
+    hardCardNoDailyOverheadCountContext: copy.export.hardCardNoDailyOverheadCountContext,
+    hardCardNoDailyOverhead: copy.export.hardCardNoDailyOverhead,
+    hardCardOnePassUnchanged: copy.breakdown.hardCardOnePassUnchanged,
+    withoutHardCardOverhead: copy.breakdown.withoutHardCardOverhead,
     direction: copy.scenarios.current.direction,
     recurringMinutes: copy.scenarios.current.recurringWorkload,
     backlogReduction: copy.scenarios.pause.reduction,
@@ -535,7 +585,7 @@ function makeExportLabels(copy: Copy): ExportLabels {
     unavailable: copy.common.notAvailable,
     days: copy.common.studyDays,
     cardsPerDay: copy.common.cardsPerDay,
-    minutesPerDay: copy.common.minutes,
+    minutesPerDay: copy.common.minutesPerDay,
     csvDate: copy.trend.date,
     csvOverdue: copy.trend.overdueBacklog,
     csvDueToday: copy.trend.dueToday,

@@ -209,6 +209,10 @@ export function calculatePlanMetrics(
 
 export function calculatePlanner(inputs: PlannerInputs, today = new Date()): PlannerResult {
   const current = calculatePlanMetrics(inputs, today)
+  const withoutHardCardOverhead = calculatePlanMetrics(
+    { ...inputs, hardCardReviewsPerDay: 0 },
+    today,
+  )
   const pauseNewCards = calculatePlanMetrics(inputs, today, { newCardsPerDay: 0 })
   const reducedScope = calculatePlanMetrics(inputs, today, {
     potentiallyTriagedCards: inputs.potentiallyTriagedCards,
@@ -239,6 +243,18 @@ export function calculatePlanner(inputs: PlannerInputs, today = new Date()): Pla
       recurringWorkloadChangeSeconds:
         plannedMetrics.recurringDailySeconds - current.recurringDailySeconds,
       metrics: plannedMetrics,
+    },
+    hardCardImpact: {
+      backlogCapacityReductionCardsPerDay: Math.max(
+        0,
+        withoutHardCardOverhead.backlogReductionCardsPerDay -
+          current.backlogReductionCardsPerDay,
+      ),
+      onePassDaysWithoutOverhead: withoutHardCardOverhead.onePassDays,
+      onePassDaysDifference:
+        current.onePassDays === null || withoutHardCardOverhead.onePassDays === null
+          ? null
+          : Math.max(0, current.onePassDays - withoutHardCardOverhead.onePassDays),
     },
     validationErrors: validatePlannerInputs(inputs, today),
   }

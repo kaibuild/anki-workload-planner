@@ -13,6 +13,20 @@ export type ExportLabels = {
   averageSeconds: string
   newCardsPerDay: string
   targetDate: string
+  hardCardHeading: string
+  hardCardCount: string
+  hardCardReviewsPerDay: string
+  extraSecondsPerHardReview: string
+  hardCardOverhead: string
+  hardCardAddedTime: string
+  hardCardReducedCapacity: string
+  usedInEstimate: string
+  contextOnly: string
+  estimatedEffect: string
+  hardCardNoDailyOverheadCountContext: string
+  hardCardNoDailyOverhead: string
+  hardCardOnePassUnchanged: string
+  withoutHardCardOverhead: string
   direction: string
   recurringMinutes: string
   backlogReduction: string
@@ -48,6 +62,19 @@ export function buildPlanMarkdown(
     result.current.onePassDays === null
       ? labels.unavailable
       : `${number.format(result.current.onePassDays)} ${labels.days}`
+  const hardCardOverheadMinutes = result.current.hardCardExtraSecondsPerDay / 60
+  const hardCardEffectLines = hardCardOverheadMinutes > 0
+    ? [
+        `- ${labels.estimatedEffect}:`,
+        `  - ${labels.hardCardAddedTime}: +${decimal.format(hardCardOverheadMinutes)} ${labels.minutesPerDay}`,
+        `  - ${labels.hardCardReducedCapacity}: ${decimal.format(result.hardCardImpact.backlogCapacityReductionCardsPerDay)} ${labels.cardsPerDay}`,
+        ...hardCardOnePassEffect(result, labels, number),
+      ]
+    : [
+        inputs.hardCardCount > 0 && inputs.hardCardReviewsPerDay === 0
+          ? labels.hardCardNoDailyOverheadCountContext
+          : labels.hardCardNoDailyOverhead,
+      ]
   return [
     `# ${labels.title}`,
     '',
@@ -62,6 +89,17 @@ export function buildPlanMarkdown(
     `- ${labels.newCardsPerDay}: ${number.format(inputs.newCardsPerDay)}`,
     `- ${labels.targetDate}: ${targetDate}`,
     '',
+    `## ${labels.hardCardHeading}`,
+    '',
+    `- ${labels.hardCardCount}: ${number.format(inputs.hardCardCount)} (${labels.contextOnly})`,
+    `- ${labels.hardCardReviewsPerDay}: ${number.format(inputs.hardCardReviewsPerDay)} (${labels.usedInEstimate})`,
+    `- ${labels.extraSecondsPerHardReview}: ${decimal.format(inputs.extraSecondsPerHardReview)} (${labels.usedInEstimate})`,
+    `- ${labels.hardCardOverhead}: ${decimal.format(hardCardOverheadMinutes)} ${labels.minutesPerDay}`,
+    `- ${labels.recurringMinutes}: ${decimal.format(result.current.recurringDailySeconds / 60)} ${labels.minutesPerDay}`,
+    `- ${labels.backlogReduction}: ${number.format(result.current.backlogReductionCardsPerDay)} ${labels.cardsPerDay}`,
+    `- ${labels.onePass}: ${onePass}`,
+    ...hardCardEffectLines,
+    '',
     `## ${labels.results}`,
     '',
     `- ${labels.direction}: ${localizedDirection}`,
@@ -75,6 +113,22 @@ export function buildPlanMarkdown(
     recommendation,
     '',
   ].join('\n')
+}
+
+function hardCardOnePassEffect(
+  result: PlannerResult,
+  labels: ExportLabels,
+  number: Intl.NumberFormat,
+): string[] {
+  const current = result.current.onePassDays
+  const withoutOverhead = result.hardCardImpact.onePassDaysWithoutOverhead
+  if (current === null || withoutOverhead === null) return []
+
+  const comparison = result.hardCardImpact.onePassDaysDifference &&
+    result.hardCardImpact.onePassDaysDifference > 0
+    ? `${number.format(current)} ${labels.days} (${labels.withoutHardCardOverhead}: ${number.format(withoutOverhead)} ${labels.days})`
+    : `${number.format(current)} ${labels.days} · ${labels.hardCardOnePassUnchanged}`
+  return [`  - ${labels.onePass}: ${comparison}`]
 }
 
 export function buildSnapshotsCsv(

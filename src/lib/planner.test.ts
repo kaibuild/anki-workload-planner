@@ -89,6 +89,72 @@ describe('workload planner', () => {
     expect(withHard.current.recurringDailySeconds - baseline.current.recurringDailySeconds).toBe(700)
   })
 
+  it('reproduces the 3,940-card hard-card feedback case exactly', () => {
+    const result = calculatePlanner(
+      input({
+        overdueBacklog: 3940,
+        typicalDailyReviews: 50,
+        dailyMinutes: 180,
+        averageSecondsPerReview: 10,
+        newCardsPerDay: 0,
+        hardCardCount: 500,
+        hardCardReviewsPerDay: 100,
+        extraSecondsPerHardReview: 7,
+        targetDate: '2026-08-10',
+      }),
+      TODAY,
+    )
+
+    expect(result.current.normalRecurringReviewSeconds).toBe(500)
+    expect(result.current.hardCardExtraSecondsPerDay).toBe(700)
+    expect(result.current.recurringDailySeconds).toBe(1200)
+    expect(result.current.backlogReductionSecondsPerDay).toBe(9600)
+    expect(result.current.backlogReductionCardsPerDay).toBe(960)
+    expect(result.current.onePassDays).toBe(5)
+    expect(result.hardCardImpact.backlogCapacityReductionCardsPerDay).toBe(70)
+    expect(result.hardCardImpact.onePassDaysWithoutOverhead).toBe(4)
+    expect(result.hardCardImpact.onePassDaysDifference).toBe(1)
+    const withoutHardCards = calculatePlanner(
+      { ...input({
+        overdueBacklog: 3940,
+        typicalDailyReviews: 50,
+        dailyMinutes: 180,
+        averageSecondsPerReview: 10,
+        newCardsPerDay: 0,
+        targetDate: '2026-08-10',
+      }), hardCardReviewsPerDay: 0 },
+      TODAY,
+    )
+    expect(
+      result.current.target.requiredDailySeconds! -
+        withoutHardCards.current.target.requiredDailySeconds!,
+    ).toBe(700)
+    expect(result.current.target.feasibility).toBe('comfortable')
+  })
+
+  it('treats known hard-card count as context only', () => {
+    const baseline = calculatePlanner(input({ hardCardCount: 0 }), TODAY)
+    const contextual = calculatePlanner(
+      input({ hardCardCount: 999_999 }),
+      TODAY,
+    )
+
+    expect(contextual.current).toEqual(baseline.current)
+    expect(contextual.hardCardImpact).toEqual(baseline.hardCardImpact)
+  })
+
+  it.each([
+    { hardCardReviewsPerDay: 0, extraSecondsPerHardReview: 7 },
+    { hardCardReviewsPerDay: 100, extraSecondsPerHardReview: 0 },
+    { hardCardReviewsPerDay: 0, extraSecondsPerHardReview: 0 },
+  ])('does not invent hard-card overhead from incomplete inputs: %o', (overrides) => {
+    const result = calculatePlanner(input({ hardCardCount: 500, ...overrides }), TODAY)
+
+    expect(result.current.hardCardExtraSecondsPerDay).toBe(0)
+    expect(result.hardCardImpact.backlogCapacityReductionCardsPerDay).toBe(0)
+    expect(result.hardCardImpact.onePassDaysDifference).toBe(0)
+  })
+
   it('handles extreme values without overflow', () => {
     const result = calculatePlanner(
       input({ overdueBacklog: 22_000, hardCardCount: 2500, hardCardReviewsPerDay: 100, typicalDailyReviews: 600 }),

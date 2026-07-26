@@ -98,15 +98,16 @@ export const ja = {
       },
       hardCardCount: {
         label: '既知のleech・難しいカード数',
-        helper: '何度も失敗する、または通常より大幅に時間がかかるカード数です。',
+        helper:
+          '参考情報のみ。この数だけではレビュー頻度が分からないため、単独では負荷の計算に使用しません。',
       },
       hardCardReviewsPerDay: {
-        label: '1日に出会う難しいカード数',
-        helper: '1日に遭遇する難しいカードのレビュー回数です。',
+        label: '1日あたりの難しいカードのレビュー数',
+        helper: '推定に使用します。普段1日に遭遇する難しいカードのレビュー回数を入力してください。',
       },
       extraSecondsPerHardReview: {
         label: '難しいカード1回あたりの追加秒数',
-        helper: '通常の平均レビュー時間を超える分です。',
+        helper: '推定に使用します。通常の平均レビュー時間を超える分を入力してください。',
       },
       newCardReviewEquivalent: {
         label: '新規カード1枚あたりの将来レビュー負荷',
@@ -130,6 +131,20 @@ export const ja = {
         label: 'Ankiを休む曜日',
         helper: '選択した曜日は、目標日プランの稼働日から除外します。',
       },
+    },
+    hardCards: {
+      heading: '難しいカードの負荷',
+      description:
+        '既知のleech・難しいカード数だけでは負荷の計算に使用されません。時間への影響を見積もるには、普段1日に何回それらのカードをレビューするかを入力してください。',
+      usedInEstimate: '推定に使用',
+      contextOnly: '参考情報のみ',
+      previewLabel: '難しいカードによる推定追加時間',
+      previewMissingReviews:
+        '現在、難しいカードによる追加時間は計算に含まれていません。負荷へ反映するには、1日あたりの難しいカードのレビュー数を入力してください。',
+      previewMissingExtraSeconds:
+        '現在、難しいカードによる追加時間は計算に含まれていません。1レビューあたりの追加秒数を0より大きくしてください。',
+      collapsedIncluded: '難しいカードの追加負荷を反映中',
+      collapsedShort: '難しいカード',
     },
     weekdays: {
       monday: '月曜日',
@@ -212,10 +227,25 @@ export const ja = {
     newCardBurdenHelp: '現在の新規カードペースが生む、将来のレビュー相当負荷です。',
     hardCardOverhead: '難しいカードの推定追加時間',
     hardCardOverheadHelp: '難しいカードが通常の平均より多く消費する時間です。',
+    hardCardNotIncluded:
+      '現在、難しいカードによる追加時間は計算に含まれていません。負荷へ反映するには、1日あたりの難しいカードのレビュー数を入力してください。',
+    hardCardCountContextOnly:
+      '既知の難しいカード数は参考情報のみです。1日あたりの難しいカードのレビュー数が0のため、追加負荷は計算に含まれていません。',
+    hardCardMissingExtraSeconds:
+      '1レビューあたりの追加秒数が0のため、難しいカードの追加負荷は計算に含まれていません。',
     recurringTotal: '継続的な1日の総負荷',
+    recurringTotalHelp: '普段のレビュー、新規カードの推定負荷、難しいカードの追加時間を含みます。',
     backlogTime: 'backlogの削減に使える時間',
     backlogTimePositive: 'この時間を期限超過カードに使えます。',
     backlogTimeNone: '継続的な負荷が、すでに1日の上限時間以上です。',
+    hardCardImpactHeading: '難しいカードの推定影響',
+    hardCardImpactDescription:
+      '難しいカードの追加負荷がない同じプランとの比較です。個々のカードを診断するものではありません。',
+    hardCardAddedTime: '1日あたりの追加時間',
+    hardCardReducedCapacity: '1日あたりに減るbacklog処理量',
+    hardCardOnePass: '一巡の推定',
+    hardCardOnePassUnchanged: '日数単位では変化なし',
+    withoutHardCardOverhead: '難しいカードの追加負荷なし',
   },
   scenarios: {
     heading: '主な調整案を比較',
@@ -336,7 +366,7 @@ export const ja = {
     duplicateDate: '別の記録が同じ日付を使っています。その記録を編集してください。',
     noteTooLong: 'メモは2,000文字以内にしてください。',
     deleted: '記録を削除しました。',
-    contextOnly: '今日が期限のカードとscheduler queueは参考情報であり、傾向計算には使いません。',
+    contextOnly: '今日が期限のカード、scheduler queue、既知の難しいカード数は参考情報であり、backlogの傾向計算には使いません。',
     actions: '操作',
     edit: '編集',
     delete: '削除',
@@ -389,8 +419,8 @@ export const ja = {
     targetHeading: '4. 目標日の実現性',
     targetBody: '休む曜日を除外し、必要な1日時間を入力した上限と比べます。不可能な値を実現可能とは表示しません。',
     targetFormula: '必要時間 = 継続負荷 + 目標達成に必要なbacklogペース',
-    contextHeading: '今日が期限のカードと現在のqueueは参考値です',
-    contextBody: 'この2項目を変えても、期限超過backlog、傾向、方向、一巡計算は変わりません。現在表示されているqueueを終えても、Anki全体の作業が完了したとは限りません。',
+    contextHeading: '詳細設定には参考情報のみの値があります',
+    contextBody: '今日が期限のカード、scheduler queue、既知のleech・難しいカード数だけでは推定結果は変わりません。難しいカードの追加時間は「1日あたりのレビュー数 × 1レビューあたりの追加秒数」で計算します。現在表示されているqueueを終えても、Anki全体の作業が完了したとは限りません。',
   },
   export: {
     heading: 'ローカルプランを書き出す',
@@ -411,6 +441,14 @@ export const ja = {
     recommendationHeading: '最初におすすめする調整',
     trendHeading: 'backlogの記録',
     generatedLocally: 'ブラウザ内でローカル生成されました。データはアップロードされていません。',
+    hardCardHeading: '難しいカードの負荷',
+    usedInEstimate: '推定に使用',
+    contextOnly: '参考情報のみ',
+    estimatedEffect: '難しいカードの追加負荷がない場合との推定差',
+    hardCardNoDailyOverheadCountContext:
+      '既知の難しいカード数は参考情報として記録されていますが、1日あたりの難しいカードのレビュー数が0のため、追加負荷は計算に含まれていません。',
+    hardCardNoDailyOverhead:
+      '計算に使う入力の一方または両方が0のため、難しいカードの追加負荷は計算に含まれていません。',
   },
   confirm: {
     deleteSnapshotTitle: 'この記録を削除しますか？',
@@ -443,6 +481,7 @@ export const ja = {
   common: {
     minutes: '分',
     minutesShort: '分',
+    minutesPerDay: '分/日',
     seconds: '秒',
     secondsShort: '秒',
     cards: '枚',

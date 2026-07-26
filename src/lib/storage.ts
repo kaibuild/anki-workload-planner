@@ -66,7 +66,14 @@ export function saveInputs(
   inputs: PlannerInputs,
   storage?: Storage | null,
 ): boolean {
-  return writeJson(STORAGE_KEYS.inputs, inputs, storage)
+  const previous = loadStoredInputs(storage)
+  const safeForStorage = { ...inputs }
+  for (const field of NUMBER_FIELDS) {
+    if (!isNonNegativeFiniteNumber(inputs[field])) {
+      safeForStorage[field] = previous[field]
+    }
+  }
+  return writeJson(STORAGE_KEYS.inputs, safeForStorage, storage)
 }
 
 export function clearStoredInputs(storage?: Storage | null): boolean {

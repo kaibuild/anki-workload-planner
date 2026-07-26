@@ -112,6 +112,24 @@ describe('deterministic recommendation rules', () => {
     )
   })
 
+  it('does not recommend hard-card triage when overhead is visible but below the deterministic threshold', () => {
+    const plannerInputs = inputs({
+      overdueBacklog: 3940,
+      typicalDailyReviews: 50,
+      dailyMinutes: 180,
+      averageSecondsPerReview: 10,
+      newCardsPerDay: 0,
+      hardCardCount: 500,
+      hardCardReviewsPerDay: 100,
+      extraSecondsPerHardReview: 7,
+      targetDate: '2026-08-10',
+    })
+
+    expect(selectRecommendation(plannerInputs, withResult(plannerInputs))).toBe(
+      'currentShrinking',
+    )
+  })
+
   it('prioritizes review time for the long-sentence-card persona', () => {
     const plannerInputs = inputs({
       overdueBacklog: 500,

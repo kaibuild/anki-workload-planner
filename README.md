@@ -78,7 +78,7 @@ These inputs deliberately remain separate:
 - **Overdue backlog:** active cards due before today. This is the genuine backlog used by backlog and trend calculations.
 - **Due today:** cards scheduled for today. It is shown for context and is never automatically added to overdue backlog.
 - **Scheduler queue:** cards Anki currently offers in the active session. It may change during a review session and is never used to derive genuine backlog.
-- **Hard or leech cards:** cards that repeatedly fail or take much longer than normal. The planner estimates their extra time only; it does not judge individual cards.
+- **Hard or leech cards:** cards that repeatedly fail or take much longer than normal. The known total is context only. The estimate uses hard-card reviews per day × extra seconds per hard review, and does not judge individual cards.
 
 Finishing the current scheduler queue is not presented as finishing all Anki work.
 
@@ -333,7 +333,7 @@ Anki負荷プランナーは、手入力した数値を基に、上記4点を透
 - **期限超過backlog：** 今日より前が期限で、まだ有効なカード。backlog計算とtrend計算に使う実際のbacklogです。
 - **今日が期限のカード：** 今日に設定されたカード。参考表示のみで、期限超過backlogへ自動加算しません。
 - **scheduler queue：** 現在のセッションでAnkiが提示しているカード。レビュー中に変化することがあり、実際のbacklogの算出には使いません。
-- **leech・難しいカード：** 繰り返し失敗する、または通常より時間がかかるカード。追加時間だけを概算し、個別カードの良し悪しは判定しません。
+- **leech・難しいカード：** 繰り返し失敗する、または通常より時間がかかるカード。既知の総数は参考情報のみです。追加時間は「1日あたりの難しいカードのレビュー数 × 1レビューあたりの追加秒数」で概算し、個別カードの良し悪しは判定しません。
 
 現在のscheduler queueを終えることを、Anki全体の作業完了とは表現しません。
 
