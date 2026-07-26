@@ -110,6 +110,7 @@ describe('workload planner', () => {
     expect(result.current.recurringDailySeconds).toBe(1200)
     expect(result.current.backlogReductionSecondsPerDay).toBe(9600)
     expect(result.current.backlogReductionCardsPerDay).toBe(960)
+    expect(result.current.actualNextStudyDayReduction).toBe(960)
     expect(result.current.onePassDays).toBe(5)
     expect(result.hardCardImpact.backlogCapacityReductionCardsPerDay).toBe(70)
     expect(result.hardCardImpact.onePassDaysWithoutOverhead).toBe(4)
@@ -130,6 +131,50 @@ describe('workload planner', () => {
         withoutHardCards.current.target.requiredDailySeconds!,
     ).toBe(700)
     expect(result.current.target.feasibility).toBe('comfortable')
+  })
+
+  it('separates raw capacity from the capped next-study-day reduction for a small backlog', () => {
+    const result = calculatePlanner(
+      input({
+        overdueBacklog: 6,
+        typicalDailyReviews: 14,
+        dailyMinutes: 28.3,
+        averageSecondsPerReview: 15,
+        newCardsPerDay: 6,
+        newCardReviewEquivalent: 1.5,
+        hardCardReviewsPerDay: 0,
+        targetDate: '2026-07-30',
+      }),
+      TODAY,
+    )
+
+    expect(result.current.normalRecurringReviewSeconds).toBe(210)
+    expect(result.current.newCardReviewSecondsPerDay).toBe(135)
+    expect(result.current.recurringDailySeconds).toBe(345)
+    expect(result.current.recurringDailySeconds / 60).toBeCloseTo(5.75)
+    expect(result.current.backlogReductionSecondsPerDay).toBe(1353)
+    expect(result.current.backlogReductionSecondsPerDay / 60).toBeCloseTo(22.55)
+    expect(result.current.backlogReductionCardsPerDay).toBeCloseTo(90.2)
+    expect(result.current.actualNextStudyDayReduction).toBe(6)
+    expect(result.current.onePassDays).toBe(1)
+  })
+
+  it('keeps raw capacity uncapped when calculating a larger backlog', () => {
+    const result = calculatePlanner(
+      input({
+        overdueBacklog: 1000,
+        typicalDailyReviews: 14,
+        dailyMinutes: 28.3,
+        averageSecondsPerReview: 15,
+        newCardsPerDay: 6,
+        newCardReviewEquivalent: 1.5,
+      }),
+      TODAY,
+    )
+
+    expect(result.current.backlogReductionCardsPerDay).toBeCloseTo(90.2)
+    expect(result.current.actualNextStudyDayReduction).toBeCloseTo(90.2)
+    expect(result.current.onePassDays).toBe(12)
   })
 
   it('treats known hard-card count as context only', () => {

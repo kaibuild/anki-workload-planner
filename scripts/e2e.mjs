@@ -15,6 +15,7 @@ const allowedRuntimeOrigin = new URL(baseUrl).origin
 const artifactsDir = resolve(process.env.QA_ARTIFACT_DIR ?? 'artifacts/qa')
 const screenshotsDir = join(artifactsDir, 'screenshots')
 const hardCardScreenshotsDir = join(screenshotsDir, 'hard-card-feedback')
+const smallBacklogScreenshotsDir = join(screenshotsDir, 'small-backlog-capacity')
 const harPath = join(artifactsDir, 'copied-brave-network.har')
 const axePath = join(artifactsDir, 'axe-results.json')
 const profileParent = process.env.BRAVE_QA_COPY_ROOT
@@ -24,6 +25,7 @@ const headless = process.env.BRAVE_QA_HEADED !== '1'
 
 await mkdir(screenshotsDir, { recursive: true })
 await mkdir(hardCardScreenshotsDir, { recursive: true })
+await mkdir(smallBacklogScreenshotsDir, { recursive: true })
 
 const results = []
 const profiles = new Set()
@@ -334,7 +336,7 @@ try {
       const japaneseBreakdownText = await japaneseBreakdown.innerText()
       assert(japaneseBreakdownText.includes('継続的な1日の総負荷'), 'Japanese total recurring workload is missing.')
       assert(japaneseBreakdownText.includes('20 分/日'), 'Japanese recurring total is not 20 minutes/day.')
-      assert(japaneseBreakdownText.includes('70 枚/日'), 'Japanese hard-card capacity effect is not 70 cards/day.')
+      assert(japaneseBreakdownText.includes('70枚/日'), 'Japanese hard-card capacity effect is not 70 cards/day.')
       await assertNoHorizontalOverflow(page, '390x844 Japanese hard-card flow')
       await assertNoClippedContent(japaneseBreakdown, 'Japanese hard-card breakdown')
       await screenshotHardCardElement(japaneseGroup, 'mobile-ja-advanced-values.png')
@@ -352,7 +354,7 @@ try {
       assert(clipboard.includes('## Hard-card workload'), 'Clipboard export lacks the English hard-card section.')
       assert(clipboard.includes('Estimated hard-card overhead: 11.7 min/day'), 'Clipboard export omits applied overhead.')
       const englishMarkdown = await downloadText(page, 'Download plan as Markdown')
-      assert(englishMarkdown.content.includes('Backlog reduction per day: 960 cards/day'), 'English Markdown does not include the 960-card capacity.')
+      assert(englishMarkdown.content.includes('Backlog reduction capacity: Up to 960 cards/day'), 'English Markdown does not include the 960-card capacity.')
       assert(englishMarkdown.content.includes('5 study days (without hard-card overhead: 4 study days)'), 'English Markdown omits the one-day hard-card effect.')
       await screenshotHardCardElement(
         page.locator('section[aria-labelledby="export-heading"]'),
@@ -382,6 +384,138 @@ try {
       equal(await page.locator('#planner-hardCardCount').inputValue(), '500', 'Known hard-card count was lost after reopening the browser profile.')
       equal(await page.locator('#planner-hardCardReviewsPerDay').inputValue(), '100', 'Hard-card reviews were lost after reopening the browser profile.')
       equal(await page.locator('#planner-extraSecondsPerHardReview').inputValue(), '7', 'Extra hard-review seconds were lost after reopening the browser profile.')
+    })
+  })
+
+  await test('Small-backlog capacity semantics and localized day labels are correct', async () => {
+    await withBrowser({
+      locale: 'en-US',
+      viewport: { width: 1440, height: 900 },
+    }, async ({ context, page }) => {
+      await context.grantPermissions(['clipboard-read', 'clipboard-write'], {
+        origin: new URL(baseUrl).origin,
+      })
+      await goto(page, '/en/plan')
+      await clearProductData(page)
+      await page.reload({ waitUntil: 'load' })
+      await fillPlanner(page, {
+        overdueBacklog: 6,
+        typicalDailyReviews: 14,
+        dailyMinutes: 28.3,
+        averageSecondsPerReview: 15,
+        newCardsPerDay: 6,
+        newCardReviewEquivalent: 1.5,
+        targetDate: localDate(14),
+      })
+
+      const resultSummary = page.locator('section[aria-labelledby="result-heading"]')
+      const currentScenario = page.locator('section[aria-labelledby="scenarios-heading"] article').first()
+      const englishSummaryText = await resultSummary.innerText()
+      const englishScenarioText = await currentScenario.innerText()
+      assert(englishSummaryText.includes('1 study day'), 'English summary does not use the singular study-day label.')
+      assert(!englishSummaryText.includes('1 study days'), 'English summary still uses the plural label for one day.')
+      for (const expected of [
+        'Recurring daily workload',
+        '5.8 min',
+        'Time remaining for backlog',
+        '22.6 min',
+        'Backlog reduction capacity',
+        'Up to 90.2 cards/day',
+        'Shrinking',
+        'Only 6 cards are currently overdue, so this backlog fits within 1 study day.',
+      ]) {
+        assert(englishScenarioText.includes(expected), `English six-card scenario is missing: ${expected}`)
+      }
+      assert(!englishScenarioText.includes('-90.2 cards/day'), 'English shrinking scenario still presents capacity as negative change.')
+      await assertNoHorizontalOverflow(page, '1440x900 English six-card flow')
+      await screenshotSmallBacklog(page, 'desktop-en-six-card-backlog.png')
+
+      await page.getByRole('button', { name: 'Copy plan as text', exact: true }).click()
+      const englishClipboard = await page.evaluate(() => navigator.clipboard.readText())
+      for (const expected of [
+        'Backlog direction: Shrinking',
+        'Current overdue backlog: 6 cards',
+        'Backlog reduction capacity: Up to 90.2 cards/day',
+        'Estimated days to complete one pass through the current backlog: 1 study day',
+        'Only 6 cards are currently overdue, so this backlog fits within 1 study day.',
+      ]) {
+        assert(englishClipboard.includes(expected), `English clipboard is missing: ${expected}`)
+      }
+      assert(!englishClipboard.includes('1 study days'), 'English clipboard contains the incorrect plural.')
+      assert(!englishClipboard.includes('-90.2 cards/day'), 'English clipboard contains misleading negative capacity.')
+      const englishMarkdown = await downloadText(page, 'Download plan as Markdown')
+      equal(englishMarkdown.content, englishClipboard, 'Clipboard and Markdown exports diverged in English.')
+      await screenshotMarkdown(
+        context,
+        englishMarkdown.content,
+        'en',
+        'english-markdown-output.png',
+      )
+
+      await page.setViewportSize({ width: 390, height: 844 })
+      await assertNoHorizontalOverflow(page, '390x844 English six-card flow')
+      await assertNoClippedContent(currentScenario, 'English mobile six-card scenario')
+      await screenshotSmallBacklog(page, 'mobile-en-six-card-backlog.png')
+
+      await page.getByRole('button', { name: '日本語', exact: true }).click()
+      await waitForPath(page, '/ja/plan')
+      equal(await page.locator('#planner-overdueBacklog').inputValue(), '6', 'Backlog was lost on Japanese switch.')
+      const japaneseSummaryText = await resultSummary.innerText()
+      const japaneseScenarioText = await currentScenario.innerText()
+      assert(japaneseSummaryText.includes('1学習日'), 'Japanese summary does not use the natural study-day label.')
+      assert(!japaneseSummaryText.includes('1 学習日'), 'Japanese summary contains an unnatural unit space.')
+      for (const expected of [
+        '継続的な1日の負荷',
+        '5.8 分',
+        'backlogに使える残り時間',
+        '22.6 分',
+        'backlogを減らせる上限',
+        '1日あたり最大90.2枚',
+        '減少',
+        '現在の期限超過backlogは6枚のため、1学習日以内に一巡できる見込みです。',
+      ]) {
+        assert(japaneseScenarioText.includes(expected), `Japanese six-card scenario is missing: ${expected}`)
+      }
+      await assertNoHorizontalOverflow(page, '390x844 Japanese six-card flow')
+      await assertNoClippedContent(currentScenario, 'Japanese mobile six-card scenario')
+      await screenshotSmallBacklog(page, 'mobile-ja-six-card-backlog.png')
+
+      await page.getByRole('button', { name: 'プランをテキストでコピー', exact: true }).click()
+      const japaneseClipboard = await page.evaluate(() => navigator.clipboard.readText())
+      for (const expected of [
+        'backlogの方向: 減少',
+        '現在の期限超過backlog: 6枚',
+        'backlogを減らせる上限: 1日あたり最大90.2枚',
+        '現在のbacklogを一巡するまでの推定日数: 1学習日',
+        '現在の期限超過backlogは6枚のため、1学習日以内に一巡できる見込みです。',
+      ]) {
+        assert(japaneseClipboard.includes(expected), `Japanese clipboard is missing: ${expected}`)
+      }
+      const japaneseMarkdown = await downloadText(page, 'プランをMarkdownでダウンロード')
+      equal(japaneseMarkdown.content, japaneseClipboard, 'Clipboard and Markdown exports diverged in Japanese.')
+      await screenshotMarkdown(
+        context,
+        japaneseMarkdown.content,
+        'ja',
+        'japanese-markdown-output.png',
+      )
+
+      await page.setViewportSize({ width: 1440, height: 900 })
+      await assertNoHorizontalOverflow(page, '1440x900 Japanese six-card flow')
+      await screenshotSmallBacklog(page, 'desktop-ja-six-card-backlog.png')
+
+      await page.getByRole('link', { name: 'backlogの推移', exact: true }).click()
+      await waitForPath(page, '/ja/trend')
+      await page.goBack()
+      await waitForPath(page, '/ja/plan')
+      equal(await page.locator('#planner-dailyMinutes').inputValue(), '28.3', 'Inputs were lost after browser Back.')
+      await page.goForward()
+      await waitForPath(page, '/ja/trend')
+      await page.getByRole('link', { name: 'プラン', exact: true }).click()
+      await waitForPath(page, '/ja/plan')
+      await page.reload({ waitUntil: 'load' })
+      equal(await page.locator('#planner-overdueBacklog').inputValue(), '6', 'Inputs were lost after direct route reload.')
+      assert((await resultSummary.innerText()).includes('1学習日'), 'Japanese result changed after direct route reload.')
     })
   })
 
@@ -679,6 +813,12 @@ try {
       'hard-card-feedback/mobile-ja-workload-breakdown.png',
       'hard-card-feedback/desktop-en-hard-card-impact.png',
       'hard-card-feedback/desktop-ja-hard-card-impact.png',
+      'small-backlog-capacity/desktop-en-six-card-backlog.png',
+      'small-backlog-capacity/desktop-ja-six-card-backlog.png',
+      'small-backlog-capacity/mobile-en-six-card-backlog.png',
+      'small-backlog-capacity/mobile-ja-six-card-backlog.png',
+      'small-backlog-capacity/english-markdown-output.png',
+      'small-backlog-capacity/japanese-markdown-output.png',
     ]
     for (const name of required) {
       const info = await stat(join(screenshotsDir, name)).catch(() => null)
@@ -1113,6 +1253,71 @@ async function screenshotHardCardElement(locator, name) {
       const skipLink = document.querySelector('.skip-link')
       if (skipLink instanceof HTMLElement) skipLink.style.removeProperty('display')
     })
+  }
+}
+
+async function screenshotSmallBacklog(page, name) {
+  await page.evaluate(() => {
+    if (document.activeElement instanceof HTMLElement) document.activeElement.blur()
+    window.scrollTo(0, 0)
+    const skipLink = document.querySelector('.skip-link')
+    if (skipLink instanceof HTMLElement) skipLink.style.display = 'none'
+  })
+  try {
+    await page.screenshot({
+      path: join(smallBacklogScreenshotsDir, name),
+      fullPage: true,
+      animations: 'disabled',
+    })
+  } finally {
+    await page.evaluate(() => {
+      const skipLink = document.querySelector('.skip-link')
+      if (skipLink instanceof HTMLElement) skipLink.style.removeProperty('display')
+    })
+  }
+}
+
+async function screenshotMarkdown(context, content, locale, name) {
+  const output = await context.newPage()
+  try {
+    await output.setViewportSize({ width: 900, height: 900 })
+    await output.setContent(
+      '<main><h1></h1><pre></pre></main>',
+      { waitUntil: 'load' },
+    )
+    await output.evaluate(({ markdown, language }) => {
+      document.documentElement.lang = language
+      document.title = language === 'ja' ? '日本語Markdown出力' : 'English Markdown output'
+      const heading = document.querySelector('h1')
+      const pre = document.querySelector('pre')
+      if (heading) heading.textContent = document.title
+      if (pre) pre.textContent = markdown
+      document.body.style.margin = '0'
+      document.body.style.background = '#f7f8f7'
+      document.body.style.color = '#0f172a'
+      const main = document.querySelector('main')
+      if (main instanceof HTMLElement) {
+        main.style.maxWidth = '820px'
+        main.style.margin = '0 auto'
+        main.style.padding = '32px'
+      }
+      if (pre instanceof HTMLElement) {
+        pre.style.whiteSpace = 'pre-wrap'
+        pre.style.overflowWrap = 'anywhere'
+        pre.style.font = '14px/1.65 ui-monospace, SFMono-Regular, Menlo, monospace'
+        pre.style.background = '#ffffff'
+        pre.style.border = '1px solid #cbd5e1'
+        pre.style.borderRadius = '16px'
+        pre.style.padding = '24px'
+      }
+    }, { markdown: content, language: locale })
+    await output.screenshot({
+      path: join(smallBacklogScreenshotsDir, name),
+      fullPage: true,
+      animations: 'disabled',
+    })
+  } finally {
+    await output.close()
   }
 }
 

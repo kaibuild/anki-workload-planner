@@ -1,41 +1,71 @@
 import { ScenarioCard, type ScenarioTone } from './ScenarioCard'
+import { formatUnitCount, type PluralForms } from '../i18n'
+import { getBacklogMetricPresentation } from '../lib/backlogPresentation'
 import type { BacklogDirection, FeasibilityStatus, PlannerInputs, PlannerResult } from '../types/planner'
 
 export type ScenarioLabels = {
   heading: string
   description: string
-  current: { title: string; description: string }
+  estimateNote: string
+  current: {
+    title: string
+    description: string
+    backlogReductionCapacity: string
+    estimatedBacklogGrowth: string
+    estimatedBacklogChange: string
+    reductionCapacityValue: string
+    growthValue: string
+    flatValue: string
+    fitsWithinOneDay: string
+  }
   pause: { title: string; description: string; freed: string; difference: string }
   target: { title: string; description: string; workingDays: string; requiredBacklog: string; totalReviews: string; requiredMinutes: string; adjustmentOptions: string }
   reduce: { title: string; description: string; before: string; after: string; onePassChange: string; scopeOnly: string }
   add: { title: string; description: string; addedPerDay: string; workloadChange: string; resultingDirection: string; targetFeasibility: string; rough: string }
   recurring: string
   backlogTime: string
-  dailyDelta: string
   direction: string
   onePass: string
   targetFeasibility: string
   directions: Record<BacklogDirection, string>
   feasibility: Record<FeasibilityStatus, string>
   minutesPerDay: string
-  cardsPerDay: string
-  days: string
+  card: PluralForms
+  cardPerDay: PluralForms
+  reviewPerDay: PluralForms
+  studyDay: PluralForms
+  workingDay: PluralForms
   unavailable: string
   noChange: string
   noBacklog: string
 }
 
 export function ScenarioGrid({ inputs, result, labels, locale }: { inputs: PlannerInputs; result: PlannerResult; labels: ScenarioLabels; locale: 'en' | 'ja' }) {
-  const number = new Intl.NumberFormat(locale, { maximumFractionDigits: 1, signDisplay: 'auto' })
   const whole = new Intl.NumberFormat(locale, { maximumFractionDigits: 0 })
   const minutes = (seconds: number) => `${number.format(seconds / 60)} ${labels.minutesPerDay}`
-  const cards = (value: number) => `${number.format(value)} ${labels.cardsPerDay}`
-  const wholeCards = (value: number) => `${whole.format(value)} ${labels.cardsPerDay}`
-  const days = (value: number | null) => value === null ? labels.unavailable : `${whole.format(value)} ${labels.days}`
+  const number = new Intl.NumberFormat(locale, { maximumFractionDigits: 1 })
+  const cardsPerDay = (value: number) => formatUnitCount(value, locale, labels.cardPerDay, 1)
+  const wholeCardsPerDay = (value: number) => formatUnitCount(value, locale, labels.cardPerDay)
+  const reviewsPerDay = (value: number) => formatUnitCount(value, locale, labels.reviewPerDay, 1)
+  const days = (value: number | null) =>
+    value === null ? labels.unavailable : formatUnitCount(value, locale, labels.studyDay)
   const current = result.current
   const pause = result.pauseNewCards
   const target = current.target
-  const scopeDaysChange = formatDayDifference(current.onePassDays, result.reducedScope.onePassDays, whole, labels)
+  const scopeDaysChange = formatDayDifference(
+    current.onePassDays,
+    result.reducedScope.onePassDays,
+    locale,
+    labels,
+  )
+  const currentBacklogMetric = getBacklogMetricPresentation(current, locale, {
+    estimateNote: labels.estimateNote,
+    ...labels.current,
+    noBacklog: labels.noBacklog,
+    card: labels.card,
+    cardPerDay: labels.cardPerDay,
+    studyDay: labels.studyDay,
+  })
   const cardsTone = (direction: BacklogDirection): ScenarioTone => direction === 'shrinking' ? 'good' : direction === 'flat' ? 'warning' : 'danger'
 
   const scenarios = [
@@ -46,7 +76,11 @@ export function ScenarioGrid({ inputs, result, labels, locale }: { inputs: Plann
       rows: [
         { label: labels.recurring, value: minutes(current.recurringDailySeconds) },
         { label: labels.backlogTime, value: minutes(current.backlogReductionSecondsPerDay) },
-        { label: labels.dailyDelta, value: current.activeBacklog === 0 ? cards(0) : cards(current.dailyBacklogDelta) },
+        {
+          label: currentBacklogMetric.label,
+          value: currentBacklogMetric.value,
+          note: currentBacklogMetric.note,
+        },
         { label: labels.direction, value: current.activeBacklog === 0 ? labels.noBacklog : labels.directions[current.direction] },
         { label: labels.onePass, value: current.activeBacklog === 0 ? labels.noBacklog : days(current.onePassDays) },
         { label: labels.targetFeasibility, value: labels.feasibility[target.feasibility] },
@@ -57,7 +91,7 @@ export function ScenarioGrid({ inputs, result, labels, locale }: { inputs: Plann
       description: labels.pause.description,
       tone: cardsTone(pause.direction),
       rows: [
-        { label: labels.pause.difference, value: cards(pause.backlogReductionCardsPerDay - current.backlogReductionCardsPerDay) },
+        { label: labels.pause.difference, value: cardsPerDay(pause.backlogReductionCardsPerDay - current.backlogReductionCardsPerDay) },
         { label: labels.onePass, value: current.activeBacklog === 0 ? labels.noBacklog : days(pause.onePassDays) },
         { label: labels.pause.freed, value: minutes(current.newCardReviewSecondsPerDay) },
         { label: labels.direction, value: current.activeBacklog === 0 ? labels.noBacklog : labels.directions[pause.direction] },
@@ -68,9 +102,9 @@ export function ScenarioGrid({ inputs, result, labels, locale }: { inputs: Plann
       description: labels.target.description,
       tone: feasibilityTone(target.feasibility),
       rows: [
-        { label: labels.target.workingDays, value: whole.format(target.workingDaysUntilTarget) },
-        { label: labels.target.requiredBacklog, value: target.requiredBacklogReductionPerDay === null ? labels.unavailable : cards(target.requiredBacklogReductionPerDay) },
-        { label: labels.target.totalReviews, value: target.requiredTotalReviewsPerDay === null ? labels.unavailable : cards(target.requiredTotalReviewsPerDay) },
+        { label: labels.target.workingDays, value: formatUnitCount(target.workingDaysUntilTarget, locale, labels.workingDay) },
+        { label: labels.target.requiredBacklog, value: target.requiredBacklogReductionPerDay === null ? labels.unavailable : cardsPerDay(target.requiredBacklogReductionPerDay) },
+        { label: labels.target.totalReviews, value: target.requiredTotalReviewsPerDay === null ? labels.unavailable : reviewsPerDay(target.requiredTotalReviewsPerDay) },
         { label: labels.target.requiredMinutes, value: target.requiredDailySeconds === null ? labels.unavailable : minutes(target.requiredDailySeconds) },
         { label: labels.targetFeasibility, value: labels.feasibility[target.feasibility], note: target.feasibility === 'unrealistic' ? labels.target.adjustmentOptions : undefined },
       ],
@@ -90,7 +124,7 @@ export function ScenarioGrid({ inputs, result, labels, locale }: { inputs: Plann
       description: labels.add.description,
       tone: result.plannedCards.plannedAdditionalCardsPerDay === 0 ? 'neutral' as const : cardsTone(result.plannedCards.metrics.direction),
       rows: [
-        { label: labels.add.addedPerDay, value: wholeCards(result.plannedCards.plannedAdditionalCardsPerDay) },
+        { label: labels.add.addedPerDay, value: wholeCardsPerDay(result.plannedCards.plannedAdditionalCardsPerDay) },
         { label: labels.add.workloadChange, value: minutes(result.plannedCards.recurringWorkloadChangeSeconds), note: labels.add.rough },
         { label: labels.add.resultingDirection, value: labels.directions[result.plannedCards.metrics.direction] },
         { label: labels.add.targetFeasibility, value: labels.feasibility[result.plannedCards.metrics.target.feasibility] },
@@ -116,12 +150,16 @@ function feasibilityTone(status: FeasibilityStatus): ScenarioTone {
 function formatDayDifference(
   before: number | null,
   after: number | null,
-  formatter: Intl.NumberFormat,
+  locale: 'en' | 'ja',
   labels: ScenarioLabels,
 ): string {
   if (before === null && after === null) return labels.noChange
-  if (before === null && after !== null) return `${formatter.format(after)} ${labels.days}`
+  if (before === null && after !== null) {
+    return formatUnitCount(after, locale, labels.studyDay)
+  }
   if (before !== null && after === null) return labels.unavailable
   const difference = (after ?? 0) - (before ?? 0)
-  return difference === 0 ? labels.noChange : `${formatter.format(difference)} ${labels.days}`
+  return difference === 0
+    ? labels.noChange
+    : formatUnitCount(difference, locale, labels.studyDay)
 }

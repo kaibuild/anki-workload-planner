@@ -1,4 +1,5 @@
 import type { PlanMetrics } from '../types/planner'
+import { formatUnitCount, type PluralForms } from '../i18n'
 
 export type SummaryLabels = {
   eyebrow: string
@@ -13,16 +14,15 @@ export type SummaryLabels = {
   adjustmentAnswer: string
   onePassUnavailable: string
   onePassComplete: string
-  days: string
+  studyDay: PluralForms
 }
 
 export function ResultsSummary({ metrics, labels, locale, recommendation }: { metrics: PlanMetrics; labels: SummaryLabels; locale: 'en' | 'ja'; recommendation: string }) {
-  const number = new Intl.NumberFormat(locale)
   const onePass = metrics.activeBacklog === 0
     ? labels.onePassComplete
     : metrics.onePassDays === null
       ? labels.onePassUnavailable
-      : `${number.format(metrics.onePassDays)} ${labels.days}`
+      : formatUnitCount(metrics.onePassDays, locale, labels.studyDay)
   const directionTone = metrics.direction === 'shrinking'
     ? 'border-teal-200 bg-teal-50 text-teal-950'
     : metrics.direction === 'flat'

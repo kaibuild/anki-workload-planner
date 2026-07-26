@@ -255,7 +255,14 @@ export const en = {
       description: 'Continue with the current time limit and new-card pace.',
       recurringWorkload: 'Recurring daily workload',
       backlogTime: 'Time remaining for backlog',
-      dailyDelta: 'Estimated daily backlog change',
+      backlogReductionCapacity: 'Backlog reduction capacity',
+      estimatedBacklogGrowth: 'Estimated backlog growth',
+      estimatedBacklogChange: 'Estimated backlog change',
+      reductionCapacityValue: 'Up to {cardsPerDay}',
+      growthValue: '+{cardsPerDay}',
+      flatValue: '{cardsPerDay}',
+      fitsWithinOneDay:
+        'Only {backlog} are currently overdue, so this backlog fits within {studyDays}.',
       direction: 'Estimated direction',
       onePass: 'One-pass estimate',
       target: 'Target feasibility',
@@ -410,8 +417,10 @@ export const en = {
     workloadBody: 'Normal reviews, estimated future demand from new cards, and extra hard-card time are converted to seconds and added together.',
     workloadFormula: 'recurring workload = normal reviews + new-card burden + hard-card overhead',
     directionHeading: '2. Backlog direction',
-    directionBody: 'Recurring workload is taken from the daily time limit first. Positive remaining time can reduce overdue cards; no remaining time means flat or growing risk.',
-    directionFormula: 'backlog capacity = daily time limit − recurring workload',
+    directionBody:
+      'Recurring workload is taken from the daily time limit first. Backlog reduction capacity is the maximum number of overdue cards the entered time budget could handle in one study day. If the current backlog is smaller than that capacity, the backlog can only decrease to zero.',
+    directionFormula:
+      'backlog time = daily time limit − recurring workload; reduction capacity = backlog time ÷ seconds per review',
     onePassHeading: '3. One-pass estimate',
     onePassBody: 'The estimate divides current overdue-card time by the spare time available on each study day. It is not an exact recovery date.',
     onePassFormula: 'study days ≈ overdue-card time ÷ daily backlog capacity',
@@ -448,6 +457,8 @@ export const en = {
       'Known hard-card count was recorded as context, but no daily hard-card overhead was included because hard-card reviews per day was zero.',
     hardCardNoDailyOverhead:
       'No daily hard-card overhead was included because one or both calculation inputs were zero.',
+    backlogDirection: 'Backlog direction',
+    currentOverdueBacklog: 'Current overdue backlog',
   },
   confirm: {
     deleteSnapshotTitle: 'Delete this snapshot?',
@@ -490,6 +501,32 @@ export const en = {
     days: 'days',
     studyDays: 'study days',
     workingDays: 'working days',
+    units: {
+      studyDay: {
+        one: '{count} study day',
+        other: '{count} study days',
+      },
+      workingDay: {
+        one: '{count} working day',
+        other: '{count} working days',
+      },
+      card: {
+        one: '{count} card',
+        other: '{count} cards',
+      },
+      review: {
+        one: '{count} review',
+        other: '{count} reviews',
+      },
+      cardPerDay: {
+        one: '{count} card/day',
+        other: '{count} cards/day',
+      },
+      reviewPerDay: {
+        one: '{count} review/day',
+        other: '{count} reviews/day',
+      },
+    },
     perDay: 'per day',
     notAvailable: 'Not available',
     none: 'None',

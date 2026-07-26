@@ -169,6 +169,10 @@ export function calculatePlanMetrics(
       ? safeDivide(backlogReductionSecondsPerDay, averageSeconds)
       : 0
   const direction = getDirection(recurringDailySeconds, dailyAvailableSeconds)
+  const actualNextStudyDayReduction =
+    direction === 'shrinking'
+      ? Math.min(activeBacklog, backlogReductionCardsPerDay)
+      : 0
   const dailyBacklogDelta =
     averageSeconds > 0
       ? Math.sign(recurringDailySeconds - dailyAvailableSeconds) *
@@ -200,6 +204,7 @@ export function calculatePlanMetrics(
     recurringDailySeconds,
     backlogReductionSecondsPerDay,
     backlogReductionCardsPerDay,
+    actualNextStudyDayReduction,
     direction,
     dailyBacklogDelta,
     onePassDays,

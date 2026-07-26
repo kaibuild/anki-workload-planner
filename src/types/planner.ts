@@ -39,6 +39,7 @@ export type PlanMetrics = {
   recurringDailySeconds: number
   backlogReductionSecondsPerDay: number
   backlogReductionCardsPerDay: number
+  actualNextStudyDayReduction: number
   direction: BacklogDirection
   dailyBacklogDelta: number
   onePassDays: number | null

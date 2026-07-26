@@ -111,6 +111,22 @@ export function formatInteger(value: number, locale: Locale): string {
   return new Intl.NumberFormat(localeTag(locale), { maximumFractionDigits: 0 }).format(value)
 }
 
+export type PluralForms = Readonly<{
+  one: string
+  other: string
+}>
+
+export function formatUnitCount(
+  value: number,
+  locale: Locale,
+  forms: PluralForms,
+  maximumFractionDigits = 0,
+): string {
+  const count = formatNumber(value, locale, maximumFractionDigits)
+  const category = new Intl.PluralRules(localeTag(locale)).select(value)
+  return interpolate(category === 'one' ? forms.one : forms.other, { count })
+}
+
 export function formatDate(value: Date | string, locale: Locale): string {
   const date = typeof value === 'string' ? parseLocalDate(value) : value
   if (!date || Number.isNaN(date.getTime())) return translations[locale].common.notAvailable

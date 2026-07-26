@@ -32,13 +32,34 @@ const LABELS: ExportLabels = {
   hardCardOnePassUnchanged: 'no whole-day change',
   withoutHardCardOverhead: 'without hard-card overhead',
   direction: 'Direction',
+  backlogDirection: 'Backlog direction',
+  currentOverdueBacklog: 'Current overdue backlog',
   recurringMinutes: 'Recurring minutes',
-  backlogReduction: 'Backlog reduction',
   onePass: 'One pass',
   feasibility: 'Feasibility',
   unavailable: 'Not available',
-  days: 'days',
-  cardsPerDay: 'cards/day',
+  noBacklog: 'No active overdue backlog',
+  estimateNote: 'Rough estimate only.',
+  backlogReductionCapacity: 'Backlog reduction capacity',
+  estimatedBacklogGrowth: 'Estimated backlog growth',
+  estimatedBacklogChange: 'Estimated backlog change',
+  reductionCapacityValue: 'Up to {cardsPerDay}',
+  growthValue: '+{cardsPerDay}',
+  flatValue: '{cardsPerDay}',
+  fitsWithinOneDay:
+    'Only {backlog} are currently overdue, so this backlog fits within {studyDays}.',
+  studyDay: {
+    one: '{count} study day',
+    other: '{count} study days',
+  },
+  card: {
+    one: '{count} card',
+    other: '{count} cards',
+  },
+  cardPerDay: {
+    one: '{count} card/day',
+    other: '{count} cards/day',
+  },
   minutesPerDay: 'minutes/day',
   csvDate: 'Date',
   csvOverdue: 'Overdue',
@@ -71,11 +92,32 @@ const JA_LABELS: ExportLabels = {
     '計算に使う入力の一方または両方が0のため、難しいカードの追加負荷は計算に含まれていません。',
   hardCardOnePassUnchanged: '日数単位では変化なし',
   withoutHardCardOverhead: '難しいカードの追加負荷なし',
+  backlogDirection: 'backlogの方向',
+  currentOverdueBacklog: '現在の期限超過backlog',
   recurringMinutes: '継続的な1日の負荷',
-  backlogReduction: '1日あたりのbacklog削減数',
   onePass: '現在のbacklogを一巡するまでの推定日数',
-  days: '学習日',
-  cardsPerDay: '枚/日',
+  noBacklog: '有効な期限超過backlogはありません',
+  estimateNote: '概算値です。',
+  backlogReductionCapacity: 'backlogを減らせる上限',
+  estimatedBacklogGrowth: 'backlogの推定増加',
+  estimatedBacklogChange: 'backlogの推定変化',
+  reductionCapacityValue: '1日あたり最大{cards}',
+  growthValue: '1日あたり+{cards}',
+  flatValue: '1日あたり{cards}',
+  fitsWithinOneDay:
+    '現在の期限超過backlogは{backlog}のため、{studyDays}以内に一巡できる見込みです。',
+  studyDay: {
+    one: '{count}学習日',
+    other: '{count}学習日',
+  },
+  card: {
+    one: '{count}枚',
+    other: '{count}枚',
+  },
+  cardPerDay: {
+    one: '{count}枚/日',
+    other: '{count}枚/日',
+  },
   minutesPerDay: '分/日',
 }
 
@@ -155,11 +197,21 @@ describe('plan Markdown export', () => {
     expect(markdown).toContain(`- ${labels.extraSecondsPerHardReview}: 7 (${labels.usedInEstimate})`)
     expect(markdown).toContain(`- ${labels.hardCardOverhead}: 11.7 ${labels.minutesPerDay}`)
     expect(markdown).toContain(`- ${labels.recurringMinutes}: 20 ${labels.minutesPerDay}`)
-    expect(markdown).toContain(`- ${labels.backlogReduction}: 960 ${labels.cardsPerDay}`)
-    expect(markdown).toContain(`- ${labels.onePass}: 5 ${labels.days}`)
-    expect(markdown).toContain(`  - ${labels.hardCardReducedCapacity}: 70 ${labels.cardsPerDay}`)
     expect(markdown).toContain(
-      `5 ${labels.days} (${labels.withoutHardCardOverhead}: 4 ${labels.days})`,
+      locale === 'ja'
+        ? `- ${labels.backlogReductionCapacity}: 1日あたり最大960枚`
+        : `- ${labels.backlogReductionCapacity}: Up to 960 cards/day`,
+    )
+    expect(markdown).toContain(
+      `- ${labels.onePass}: ${locale === 'ja' ? '5学習日' : '5 study days'}`,
+    )
+    expect(markdown).toContain(
+      `  - ${labels.hardCardReducedCapacity}: ${locale === 'ja' ? '70枚/日' : '70 cards/day'}`,
+    )
+    expect(markdown).toContain(
+      locale === 'ja'
+        ? `5学習日 (${labels.withoutHardCardOverhead}: 4学習日)`
+        : `5 study days (${labels.withoutHardCardOverhead}: 4 study days)`,
     )
   })
 
@@ -188,6 +240,112 @@ describe('plan Markdown export', () => {
     expect(markdown).toContain(labels.hardCardNoDailyOverheadCountContext)
     expect(markdown).toContain(`- ${labels.hardCardCount}: 500 (${labels.contextOnly})`)
     expect(markdown).toContain(`- ${labels.hardCardOverhead}: 0 ${labels.minutesPerDay}`)
+  })
+
+  it.each([
+    ['en' as const, LABELS, 'Shrinking', 'Comfortable'],
+    ['ja' as const, JA_LABELS, '減少', '余裕あり'],
+  ])('exports the six-card capacity case with corrected semantics in %s', (
+    locale,
+    labels,
+    direction,
+    feasibility,
+  ) => {
+    const today = new Date(2026, 6, 26)
+    const inputs = {
+      ...getDefaultPlannerInputs(today),
+      overdueBacklog: 6,
+      typicalDailyReviews: 14,
+      dailyMinutes: 28.3,
+      averageSecondsPerReview: 15,
+      newCardsPerDay: 6,
+      newCardReviewEquivalent: 1.5,
+      targetDate: '2026-08-09',
+    }
+    const markdown = buildPlanMarkdown(
+      inputs,
+      calculatePlanner(inputs, today),
+      locale,
+      labels,
+      direction,
+      feasibility,
+      locale === 'ja' ? '現在のペースを維持します。' : 'Keep the current pace.',
+      today,
+    )
+
+    if (locale === 'en') {
+      expect(markdown).toContain('- Backlog direction: Shrinking')
+      expect(markdown).toContain('- Current overdue backlog: 6 cards')
+      expect(markdown).toContain('- Backlog reduction capacity: Up to 90.2 cards/day')
+      expect(markdown).toContain('- One pass: 1 study day')
+      expect(markdown).toContain(
+        'Only 6 cards are currently overdue, so this backlog fits within 1 study day.',
+      )
+      expect(markdown).not.toContain('1 study days')
+      expect(markdown).not.toContain('-90.2 cards/day')
+    } else {
+      expect(markdown).toContain('- backlogの方向: 減少')
+      expect(markdown).toContain('- 現在の期限超過backlog: 6枚')
+      expect(markdown).toContain('- backlogを減らせる上限: 1日あたり最大90.2枚')
+      expect(markdown).toContain('- 現在のbacklogを一巡するまでの推定日数: 1学習日')
+      expect(markdown).toContain(
+        '現在の期限超過backlogは6枚のため、1学習日以内に一巡できる見込みです。',
+      )
+    }
+  })
+
+  it('uses plural study days for a multi-day English plan', () => {
+    const today = new Date(2026, 6, 26)
+    const inputs = {
+      ...getDefaultPlannerInputs(today),
+      overdueBacklog: 100,
+      typicalDailyReviews: 14,
+      dailyMinutes: 28.3,
+      averageSecondsPerReview: 15,
+      newCardsPerDay: 6,
+      newCardReviewEquivalent: 1.5,
+      targetDate: '2026-08-09',
+    }
+    const markdown = buildPlanMarkdown(
+      inputs,
+      calculatePlanner(inputs, today),
+      'en',
+      LABELS,
+      'Shrinking',
+      'Comfortable',
+      'Keep going.',
+      today,
+    )
+
+    expect(markdown).toContain('- One pass: 2 study days')
+    expect(markdown).not.toContain('2 study day\n')
+  })
+
+  it('does not export a catch-up duration or negative change for zero backlog', () => {
+    const today = new Date(2026, 6, 26)
+    const inputs = {
+      ...getDefaultPlannerInputs(today),
+      overdueBacklog: 0,
+      typicalDailyReviews: 14,
+      dailyMinutes: 28.3,
+      averageSecondsPerReview: 15,
+      newCardsPerDay: 0,
+      targetDate: '2026-08-09',
+    }
+    const markdown = buildPlanMarkdown(
+      inputs,
+      calculatePlanner(inputs, today),
+      'en',
+      LABELS,
+      'Shrinking',
+      'Comfortable',
+      'Keep going.',
+      today,
+    )
+
+    expect(markdown).toContain('- One pass: No active overdue backlog')
+    expect(markdown).not.toContain('0 study days')
+    expect(markdown).not.toMatch(/-\d+(?:\.\d+)? cards\/day/)
   })
 })
 

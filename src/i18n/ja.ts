@@ -256,7 +256,14 @@ export const ja = {
       description: '現在の時間上限と新規カードペースを続ける場合です。',
       recurringWorkload: '継続的な1日の負荷',
       backlogTime: 'backlogに使える残り時間',
-      dailyDelta: '1日のbacklog推定変化',
+      backlogReductionCapacity: 'backlogを減らせる上限',
+      estimatedBacklogGrowth: 'backlogの推定増加',
+      estimatedBacklogChange: 'backlogの推定変化',
+      reductionCapacityValue: '1日あたり最大{cards}',
+      growthValue: '1日あたり+{cards}',
+      flatValue: '1日あたり{cards}',
+      fitsWithinOneDay:
+        '現在の期限超過backlogは{backlog}のため、{studyDays}以内に一巡できる見込みです。',
       direction: '推定方向',
       onePass: '一巡するまでの推定',
       target: '目標日の実現性',
@@ -411,8 +418,10 @@ export const ja = {
     workloadBody: '普段のレビュー、新規カードが生む将来負荷、難しいカードの追加時間を秒へ換算して合計します。',
     workloadFormula: '継続負荷 = 普段のレビュー + 新規カード負荷 + 難しいカードの追加負荷',
     directionHeading: '2. backlogの方向',
-    directionBody: '1日の上限時間から継続負荷を先に引きます。残り時間があれば期限超過カードを減らせ、残らなければ横ばい・増加の危険があります。',
-    directionFormula: 'backlogに使える時間 = 1日の上限時間 − 継続負荷',
+    directionBody:
+      '1日の上限時間から継続負荷を先に引きます。backlogを減らせる上限は、入力した時間内で1学習日に処理できる期限超過カード数の概算です。現在のbacklogがその上限より少ない場合、backlogは0より少なくなることはありません。',
+    directionFormula:
+      'backlogに使える時間 = 1日の上限時間 − 継続負荷、削減上限 = backlogに使える時間 ÷ 1レビューの秒数',
     onePassHeading: '3. 一巡までの概算',
     onePassBody: '現在の期限超過カードに必要な時間を、1学習日あたりの余力で割ります。正確な復帰日ではありません。',
     onePassFormula: '学習日数の概算 ≈ 期限超過カードの所要時間 ÷ 1日の余力',
@@ -449,6 +458,8 @@ export const ja = {
       '既知の難しいカード数は参考情報として記録されていますが、1日あたりの難しいカードのレビュー数が0のため、追加負荷は計算に含まれていません。',
     hardCardNoDailyOverhead:
       '計算に使う入力の一方または両方が0のため、難しいカードの追加負荷は計算に含まれていません。',
+    backlogDirection: 'backlogの方向',
+    currentOverdueBacklog: '現在の期限超過backlog',
   },
   confirm: {
     deleteSnapshotTitle: 'この記録を削除しますか？',
@@ -491,6 +502,32 @@ export const ja = {
     days: '日',
     studyDays: '学習日',
     workingDays: '稼働日',
+    units: {
+      studyDay: {
+        one: '{count}学習日',
+        other: '{count}学習日',
+      },
+      workingDay: {
+        one: '{count}稼働日',
+        other: '{count}稼働日',
+      },
+      card: {
+        one: '{count}枚',
+        other: '{count}枚',
+      },
+      review: {
+        one: '{count}回',
+        other: '{count}回',
+      },
+      cardPerDay: {
+        one: '{count}枚/日',
+        other: '{count}枚/日',
+      },
+      reviewPerDay: {
+        one: '{count}回/日',
+        other: '{count}回/日',
+      },
+    },
     perDay: '1日あたり',
     notAvailable: '計算できません',
     none: 'なし',

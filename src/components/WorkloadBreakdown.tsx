@@ -1,4 +1,5 @@
 import type { HardCardImpact, PlanMetrics } from '../types/planner'
+import { formatUnitCount, type PluralForms } from '../i18n'
 
 export type BreakdownLabels = {
   heading: string
@@ -25,8 +26,8 @@ export type BreakdownLabels = {
   hardCardOnePassUnchanged: string
   withoutHardCardOverhead: string
   minutesPerDay: string
-  cardsPerDay: string
-  days: string
+  cardPerDay: PluralForms
+  studyDay: PluralForms
 }
 
 type WorkloadBreakdownProps = {
@@ -47,7 +48,6 @@ export function WorkloadBreakdown({
   locale,
 }: WorkloadBreakdownProps) {
   const decimal = new Intl.NumberFormat(locale, { maximumFractionDigits: 1 })
-  const whole = new Intl.NumberFormat(locale, { maximumFractionDigits: 0 })
   const hardCardNote = metrics.hardCardExtraSecondsPerDay > 0
     ? labels.hardCardsNote
     : hardCardReviewsPerDay > 0
@@ -143,14 +143,20 @@ export function WorkloadBreakdown({
             />
             <ImpactValue
               label={labels.hardCardReducedCapacity}
-              value={`${whole.format(impact.backlogCapacityReductionCardsPerDay)} ${labels.cardsPerDay}`}
+              value={formatUnitCount(
+                impact.backlogCapacityReductionCardsPerDay,
+                locale,
+                labels.cardPerDay,
+              )}
             />
-            {metrics.onePassDays !== null && impact.onePassDaysWithoutOverhead !== null ? (
+            {metrics.activeBacklog > 0 &&
+            metrics.onePassDays !== null &&
+            impact.onePassDaysWithoutOverhead !== null ? (
               <ImpactValue
                 label={labels.hardCardOnePass}
                 value={impact.onePassDaysDifference && impact.onePassDaysDifference > 0
-                  ? `${whole.format(metrics.onePassDays)} ${labels.days} (${labels.withoutHardCardOverhead}: ${whole.format(impact.onePassDaysWithoutOverhead)} ${labels.days})`
-                  : `${whole.format(metrics.onePassDays)} ${labels.days} · ${labels.hardCardOnePassUnchanged}`}
+                  ? `${formatUnitCount(metrics.onePassDays, locale, labels.studyDay)} (${labels.withoutHardCardOverhead}: ${formatUnitCount(impact.onePassDaysWithoutOverhead, locale, labels.studyDay)})`
+                  : `${formatUnitCount(metrics.onePassDays, locale, labels.studyDay)} · ${labels.hardCardOnePassUnchanged}`}
               />
             ) : null}
           </dl>

@@ -1,5 +1,7 @@
 import type { PlannerInputs, PlannerResult } from '../types/planner'
 import type { DailySnapshot } from '../types/snapshots'
+import { formatUnitCount, type PluralForms } from '../i18n'
+import { getBacklogMetricPresentation } from './backlogPresentation'
 
 export type ExportLabels = {
   title: string
@@ -28,13 +30,24 @@ export type ExportLabels = {
   hardCardOnePassUnchanged: string
   withoutHardCardOverhead: string
   direction: string
+  backlogDirection: string
+  currentOverdueBacklog: string
   recurringMinutes: string
-  backlogReduction: string
   onePass: string
   feasibility: string
   unavailable: string
-  days: string
-  cardsPerDay: string
+  noBacklog: string
+  estimateNote: string
+  backlogReductionCapacity: string
+  estimatedBacklogGrowth: string
+  estimatedBacklogChange: string
+  reductionCapacityValue: string
+  growthValue: string
+  flatValue: string
+  fitsWithinOneDay: string
+  studyDay: PluralForms
+  card: PluralForms
+  cardPerDay: PluralForms
   minutesPerDay: string
   csvDate: string
   csvOverdue: string
@@ -58,17 +71,32 @@ export function buildPlanMarkdown(
   const decimal = new Intl.NumberFormat(locale, { maximumFractionDigits: 1 })
   const date = new Intl.DateTimeFormat(locale, { dateStyle: 'medium' }).format(now)
   const targetDate = formatLocalDateForExport(inputs.targetDate, locale, labels.unavailable)
-  const onePass =
-    result.current.onePassDays === null
+  const onePass = result.current.activeBacklog === 0
+    ? labels.noBacklog
+    : result.current.onePassDays === null
       ? labels.unavailable
-      : `${number.format(result.current.onePassDays)} ${labels.days}`
+      : formatUnitCount(result.current.onePassDays, locale, labels.studyDay)
+  const backlogMetric = getBacklogMetricPresentation(result.current, locale, {
+    estimateNote: labels.estimateNote,
+    backlogReductionCapacity: labels.backlogReductionCapacity,
+    estimatedBacklogGrowth: labels.estimatedBacklogGrowth,
+    estimatedBacklogChange: labels.estimatedBacklogChange,
+    reductionCapacityValue: labels.reductionCapacityValue,
+    growthValue: labels.growthValue,
+    flatValue: labels.flatValue,
+    fitsWithinOneDay: labels.fitsWithinOneDay,
+    noBacklog: labels.noBacklog,
+    card: labels.card,
+    cardPerDay: labels.cardPerDay,
+    studyDay: labels.studyDay,
+  })
   const hardCardOverheadMinutes = result.current.hardCardExtraSecondsPerDay / 60
   const hardCardEffectLines = hardCardOverheadMinutes > 0
     ? [
         `- ${labels.estimatedEffect}:`,
         `  - ${labels.hardCardAddedTime}: +${decimal.format(hardCardOverheadMinutes)} ${labels.minutesPerDay}`,
-        `  - ${labels.hardCardReducedCapacity}: ${decimal.format(result.hardCardImpact.backlogCapacityReductionCardsPerDay)} ${labels.cardsPerDay}`,
-        ...hardCardOnePassEffect(result, labels, number),
+        `  - ${labels.hardCardReducedCapacity}: ${formatUnitCount(result.hardCardImpact.backlogCapacityReductionCardsPerDay, locale, labels.cardPerDay, 1)}`,
+        ...hardCardOnePassEffect(result, labels, locale),
       ]
     : [
         inputs.hardCardCount > 0 && inputs.hardCardReviewsPerDay === 0
@@ -96,16 +124,21 @@ export function buildPlanMarkdown(
     `- ${labels.extraSecondsPerHardReview}: ${decimal.format(inputs.extraSecondsPerHardReview)} (${labels.usedInEstimate})`,
     `- ${labels.hardCardOverhead}: ${decimal.format(hardCardOverheadMinutes)} ${labels.minutesPerDay}`,
     `- ${labels.recurringMinutes}: ${decimal.format(result.current.recurringDailySeconds / 60)} ${labels.minutesPerDay}`,
-    `- ${labels.backlogReduction}: ${number.format(result.current.backlogReductionCardsPerDay)} ${labels.cardsPerDay}`,
+    `- ${backlogMetric.label}: ${backlogMetric.value}`,
     `- ${labels.onePass}: ${onePass}`,
     ...hardCardEffectLines,
     '',
     `## ${labels.results}`,
     '',
-    `- ${labels.direction}: ${localizedDirection}`,
+    `- ${labels.backlogDirection}: ${localizedDirection}`,
+    `- ${labels.currentOverdueBacklog}: ${formatUnitCount(result.current.activeBacklog, locale, labels.card)}`,
     `- ${labels.recurringMinutes}: ${decimal.format(result.current.recurringDailySeconds / 60)} ${labels.minutesPerDay}`,
-    `- ${labels.backlogReduction}: ${number.format(result.current.backlogReductionCardsPerDay)} ${labels.cardsPerDay}`,
+    `- ${backlogMetric.label}: ${backlogMetric.value}`,
     `- ${labels.onePass}: ${onePass}`,
+    ...(backlogMetric.note && backlogMetric.note !== labels.estimateNote
+      ? [`- ${backlogMetric.note}`]
+      : []),
+    `- ${labels.estimateNote}`,
     `- ${labels.feasibility}: ${localizedFeasibility}`,
     '',
     `## ${labels.recommendation}`,
@@ -118,16 +151,16 @@ export function buildPlanMarkdown(
 function hardCardOnePassEffect(
   result: PlannerResult,
   labels: ExportLabels,
-  number: Intl.NumberFormat,
+  locale: 'en' | 'ja',
 ): string[] {
   const current = result.current.onePassDays
   const withoutOverhead = result.hardCardImpact.onePassDaysWithoutOverhead
-  if (current === null || withoutOverhead === null) return []
+  if (result.current.activeBacklog === 0 || current === null || withoutOverhead === null) return []
 
   const comparison = result.hardCardImpact.onePassDaysDifference &&
     result.hardCardImpact.onePassDaysDifference > 0
-    ? `${number.format(current)} ${labels.days} (${labels.withoutHardCardOverhead}: ${number.format(withoutOverhead)} ${labels.days})`
-    : `${number.format(current)} ${labels.days} · ${labels.hardCardOnePassUnchanged}`
+    ? `${formatUnitCount(current, locale, labels.studyDay)} (${labels.withoutHardCardOverhead}: ${formatUnitCount(withoutOverhead, locale, labels.studyDay)})`
+    : `${formatUnitCount(current, locale, labels.studyDay)} · ${labels.hardCardOnePassUnchanged}`
   return [`  - ${labels.onePass}: ${comparison}`]
 }
 

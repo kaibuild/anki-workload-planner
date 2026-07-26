@@ -119,9 +119,12 @@ backlogReductionSecondsPerDay =
 backlogReductionCardsPerDay =
   backlogReductionSecondsPerDay / averageSecondsPerReview
   when the numerator and review time are positive; otherwise 0
+
+actualNextStudyDayReduction =
+  min(activeBacklog, backlogReductionCardsPerDay)
 ```
 
-The backlog is estimated to be **shrinking** when recurring workload is below available time, **flat** when they are equal, and **growing** when recurring workload exceeds available time. The signed daily delta is estimated as `(recurringDailySeconds - dailyAvailableSeconds) / averageSecondsPerReview`: positive means growth and negative means reduction.
+The backlog is estimated to be **shrinking** when recurring workload is below available time, **flat** when they are equal, and **growing** when recurring workload exceeds available time. When shrinking, the UI presents `backlogReductionCardsPerDay` as a planning capacity rather than a negative observed change. If that capacity is larger than the active backlog, the next-study-day reduction is capped at the current backlog because it cannot decrease below zero. When growing, the positive shortfall `(recurringDailySeconds - dailyAvailableSeconds) / averageSecondsPerReview` is presented as estimated growth.
 
 When backlog-reduction capacity is positive:
 
@@ -358,9 +361,12 @@ backlogReductionSecondsPerDay =
 backlogReductionCardsPerDay =
   backlogReductionSecondsPerDay / averageSecondsPerReview
   （backlog削減時間とレビュー秒数が正の場合。それ以外は0）
+
+actualNextStudyDayReduction =
+  min(activeBacklog, backlogReductionCardsPerDay)
 ```
 
-継続的な負荷が利用可能時間より小さければbacklogは**減少**、等しければ**横ばい**、大きければ**増加**と推定します。1日あたりの符号付き変化量は、`(recurringDailySeconds - dailyAvailableSeconds) / averageSecondsPerReview`です。正なら増加、負なら減少を表します。
+継続的な負荷が利用可能時間より小さければbacklogは**減少**、等しければ**横ばい**、大きければ**増加**と推定します。減少時の`backlogReductionCardsPerDay`は実測変化ではなく、1学習日に処理できる上限として表示します。この上限が現在のbacklogを超えても、実際の次回削減数は現在のbacklogまでで、0未満にはなりません。増加時は、`(recurringDailySeconds - dailyAvailableSeconds) / averageSecondsPerReview`で求めた正の不足量を推定増加として表示します。
 
 backlogを減らす余力がある場合は、次の式を使います。
 

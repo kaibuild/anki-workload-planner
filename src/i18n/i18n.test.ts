@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest'
 import {
   detectBrowserLocale,
   en,
+  formatUnitCount,
   getInitialLocale,
   ja,
   loadStoredLocale,
@@ -67,6 +68,31 @@ describe('translation dictionaries', () => {
     expect(ja.form.fields.extraSecondsPerHardReview.helper).toContain('推定に使用')
     expect(ja.form.hardCards.previewMissingReviews).toContain('追加時間は計算に含まれていません')
     expect(ja.export.hardCardNoDailyOverheadCountContext).toContain('参考情報として記録')
+  })
+})
+
+describe('localized count formatting', () => {
+  it.each([
+    [0, '0 study days'],
+    [1, '1 study day'],
+    [2, '2 study days'],
+    [-1, '-1 study day'],
+  ])('formats %s English study days', (value, expected) => {
+    expect(formatUnitCount(value, 'en', en.common.units.studyDay)).toBe(expected)
+  })
+
+  it.each([
+    [1, '1学習日'],
+    [2, '2学習日'],
+  ])('formats %s Japanese study days without an unnatural space', (value, expected) => {
+    expect(formatUnitCount(value, 'ja', ja.common.units.studyDay)).toBe(expected)
+  })
+
+  it('uses singular English card and review units where applicable', () => {
+    expect(formatUnitCount(1, 'en', en.common.units.cardPerDay)).toBe('1 card/day')
+    expect(formatUnitCount(2, 'en', en.common.units.cardPerDay)).toBe('2 cards/day')
+    expect(formatUnitCount(1, 'en', en.common.units.reviewPerDay)).toBe('1 review/day')
+    expect(formatUnitCount(2, 'en', en.common.units.reviewPerDay)).toBe('2 reviews/day')
   })
 })
 
