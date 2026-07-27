@@ -75,10 +75,11 @@ Data may still be visible to anyone with access to the same device and browser p
 
 These inputs deliberately remain separate:
 
-- **Cards overdue before today:** unfinished cards whose due date was before the current Anki study day. Cards due today are not included. In Anki Desktop Browse, search [`prop:due<=-1`](https://docs.ankiweb.net/searching.html#card-properties) and use the number of matching cards.
+- **Cards overdue before today:** unfinished cards whose due date was before the current Anki study day. Cards due today are not included. In Anki Desktop Browse, switch to Cards mode, search [`prop:due<=-1`](https://docs.ankiweb.net/searching.html#card-properties), and use the number of matching cards.
 - **Red or green counts:** color alone does not define overdue status. Do not copy a colored queue count into the overdue field.
 - **Usual review cards due per day:** a normal-day estimate of Review cards due, excluding the overdue cards entered separately and new cards introduced that day.
 - **Anki Stats review count:** this is a count of answers, not unique due cards. The same Learning or Relearning card may count more than once, so do not paste it directly into the usual-review field. See the [official Statistics definition](https://docs.ankiweb.net/stats.html#today).
+- **Scope:** estimate overdue and usual Review cards over the same deck or collection scope.
 - **Due today:** cards scheduled for today. It is shown for context and is never automatically added to overdue backlog.
 - **Scheduler queue:** cards Anki currently offers in the active session. It may change during a review session and is never used to derive genuine backlog.
 - **Hard or leech cards:** cards that repeatedly fail or take much longer than normal. The known total is context only. The estimate uses hard-card reviews per day × extra seconds per hard review, and does not judge individual cards.
@@ -337,10 +338,11 @@ Anki負荷プランナーは、手入力した数値を基に、上記4点を透
 
 次の数値は意図的に分けて扱います。
 
-- **今日より前が期限の未処理カード：** 今日より前が期限だったのに未処理のカードです。今日が期限のカードは含めません。Anki DesktopのBrowseで[`prop:due<=-1`](https://docs.ankiweb.net/searching.html#card-properties)を検索し、該当カード数を使います。
+- **今日より前が期限の未処理カード：** 今日より前が期限だったのに未処理のカードです。今日が期限のカードは含めません。Anki DesktopのBrowseをCardsモードにし、[`prop:due<=-1`](https://docs.ankiweb.net/searching.html#card-properties)を検索して、該当カード数を使います。
 - **赤・緑などの表示数：** 色だけではoverdueを判断できません。色付きqueueの件数を、期限超過入力へそのまま転記しないでください。
 - **普段その日に期限を迎えるレビュー数：** 別に入力した期限超過カードと、その日に追加する新規カードを除いた、普段の日のReviewカード数の概算です。
 - **Anki Statsのreview count：** uniqueなカード数ではなく回答回数です。同じLearning・Relearningカードが複数回含まれることがあるため、普段のレビュー入力へそのまま転記しないでください。詳しくは[公式Statisticsの定義](https://docs.ankiweb.net/stats.html#today)をご覧ください。
+- **対象範囲：** 期限超過カード数と普段のReviewカード数は、同じデッキまたはコレクション範囲で見積もってください。
 - **今日が期限のカード：** 今日に設定されたカード。参考表示のみで、期限超過backlogへ自動加算しません。
 - **scheduler queue：** 現在のセッションでAnkiが提示しているカード。レビュー中に変化することがあり、実際のbacklogの算出には使いません。
 - **leech・難しいカード：** 繰り返し失敗する、または通常より時間がかかるカード。既知の総数は参考情報のみです。追加時間は「1日あたりの難しいカードのレビュー数 × 1レビューあたりの追加秒数」で概算し、個別カードの良し悪しは判定しません。

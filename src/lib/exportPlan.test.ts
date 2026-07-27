@@ -9,9 +9,9 @@ const LABELS: ExportLabels = {
   inputs: 'Inputs',
   inputInterpretation: 'How these inputs were interpreted',
   overdueInputRule:
-    'Cards due before today and unfinished were treated as overdue. Cards due today and red or green card counts were not inferred; use prop:due<=-1 to find the overdue count.',
+    'Cards due before today and unfinished were treated as overdue. Cards due today and red or green card counts were not inferred; use prop:due<=-1 in Browse Cards mode to find the overdue count.',
   usualReviewsInputRule:
-    'Usual Review cards due were treated as an estimated card count excluding the entered overdue cards and new cards, not as the Anki Stats answer count.',
+    'Usual Review cards due were treated as an estimated card count excluding the entered overdue cards and new cards, not as the Anki Stats answer count. Overdue and usual-review estimates should use the same deck or collection scope.',
   results: 'Results',
   recommendation: 'Recommendation',
   overdueBacklog: 'Cards overdue before today',
@@ -81,9 +81,9 @@ const JA_LABELS: ExportLabels = {
   inputs: '現在の入力',
   inputInterpretation: '入力値の解釈',
   overdueInputRule:
-    '今日より前が期限で未処理のカードをoverdueとして扱います。今日が期限のカードや赤・緑の表示数からは推測しません。overdue数はprop:due<=-1で確認できます。',
+    '今日より前が期限で未処理のカードをoverdueとして扱います。今日が期限のカードや赤・緑の表示数からは推測しません。overdue数はBrowseのCardsモードでprop:due<=-1を使って確認できます。',
   usualReviewsInputRule:
-    '普段その日に期限を迎えるReviewカード数の概算として扱います。入力済みの期限超過カードと新規カードを除き、Anki Statsの回答回数はそのまま使用しません。',
+    '普段その日に期限を迎えるReviewカード数の概算として扱います。入力済みの期限超過カードと新規カードを除き、Anki Statsの回答回数はそのまま使用しません。期限超過と普段のReviewは、同じデッキまたはコレクション範囲で見積もります。',
   results: 'サマリー',
   recommendation: '最初におすすめする調整',
   hardCardHeading: '難しいカードの負荷',

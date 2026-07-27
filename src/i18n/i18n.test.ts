@@ -78,6 +78,8 @@ describe('translation dictionaries', () => {
 
     expect(en.form.inputSemantics.findOverdueQuery).toBe('prop:due<=-1')
     expect(ja.form.inputSemantics.findOverdueQuery).toBe('prop:due<=-1')
+    expect(en.form.inputSemantics.findOverdueStepBrowse).toContain('Cards mode')
+    expect(ja.form.inputSemantics.findOverdueStepBrowse).toContain('Cardsモード')
     expect(en.form.inputSemantics.overdueColorWarning).toContain('red or green')
     expect(ja.form.inputSemantics.overdueColorWarning).toContain('赤・緑')
     expect(en.glossary.colorQuestion).toBe('Are overdue cards red or green?')
@@ -91,8 +93,10 @@ describe('translation dictionaries', () => {
     expect(ja.form.fields.typicalDailyReviews.helper).toContain('新規カード')
     expect(en.form.inputSemantics.dailyReviewStatsWarning).toContain('counts each answer')
     expect(en.form.inputSemantics.dailyReviewStatsWarning).toContain('more than once')
+    expect(en.form.inputSemantics.dailyReviewEstimateNote).toContain('same deck or collection scope')
     expect(ja.form.inputSemantics.dailyReviewStatsWarning).toContain('回答回数')
     expect(ja.form.inputSemantics.dailyReviewStatsWarning).toContain('複数回')
+    expect(ja.form.inputSemantics.dailyReviewEstimateNote).toContain('同じデッキまたはコレクション範囲')
   })
 
   it('never defines red or green as universally overdue', () => {

@@ -422,10 +422,15 @@ try {
       assert((await page.locator('#planner-overdueBacklog-help').innerText()).includes('Cards due today are not included'), 'English overdue helper does not exclude cards due today.')
       assert((await page.locator('#planner-overdue-color-warning').innerText()).includes('red or green'), 'English visible color warning is missing.')
       assert((await page.locator('#planner-typical-review-stats-help').innerText()).includes('Stats counts each answer'), 'English Stats answer-count warning is missing.')
+      assert(
+        (await page.locator('#planner-typical-review-estimate-help').innerText()).includes('same deck or collection scope'),
+        'English deck/collection scope guidance is missing.',
+      )
 
       const overdueHelp = page.locator('details').filter({ hasText: 'How do I find this number?' })
       await openDetails(overdueHelp, 'English overdue-number guide')
       assert((await overdueHelp.innerText()).includes('Open Browse.'), 'Browse instructions are missing.')
+      assert((await overdueHelp.innerText()).includes('Cards mode'), 'Browse Cards-mode instruction is missing.')
       assert((await overdueHelp.innerText()).includes('prop:due<=-1'), 'Official overdue search is missing.')
       equal(await overdueHelp.locator('code').innerText(), 'prop:due<=-1', 'Official overdue query is not marked up as code.')
       const quickGuide = page.locator('details').filter({ hasText: 'Which number goes where?' })
@@ -544,8 +549,13 @@ try {
         'Japanese entered-overdue confirmation is not visible.',
       )
       assert((await page.locator('#planner-typical-review-stats-help').innerText()).includes('回答回数'), 'Japanese Stats answer-count warning is missing.')
+      assert(
+        (await page.locator('#planner-typical-review-estimate-help').innerText()).includes('同じデッキまたはコレクション範囲'),
+        'Japanese deck/collection scope guidance is missing.',
+      )
       const japaneseOverdueHelp = page.locator('details').filter({ hasText: 'この数値の確認方法' })
       await openDetails(japaneseOverdueHelp, 'Japanese overdue-number guide')
+      assert((await japaneseOverdueHelp.innerText()).includes('Cardsモード'), 'Japanese Browse Cards-mode instruction is missing.')
       assert((await japaneseOverdueHelp.innerText()).includes('prop:due<=-1'), 'Japanese official overdue search is missing.')
       const japaneseSummaryText = await resultSummary.innerText()
       const japaneseScenarioText = await currentScenario.innerText()

@@ -152,7 +152,7 @@ export const en = {
         'Make sure these cards were due before today. Red or green card counts are not automatically overdue cards.',
       findOverdueTitle: 'How do I find this number?',
       findOverdueIntro: 'In Anki Desktop:',
-      findOverdueStepBrowse: 'Open Browse.',
+      findOverdueStepBrowse: 'Open Browse. Use Cards mode.',
       findOverdueStepSearch: 'Search for:',
       findOverdueQuery: 'prop:due<=-1',
       findOverdueStepCount: 'Use the number of matching cards.',
@@ -163,11 +163,11 @@ export const en = {
       dailyReviewStatsWarning:
         'Do not automatically paste Anki Stats “review count” here. Stats counts each answer, so the same Learning or Relearning card may be counted more than once.',
       dailyReviewEstimateNote:
-        'An estimate is fine. If Learning or difficult cards make each session slower, reflect that in “Average seconds per review” or the hard-card settings.',
+        'An estimate is fine. If Learning or difficult cards make each session slower, reflect that in “Average seconds per review” or the hard-card settings. Use the same deck or collection scope for both overdue and usual-review estimates.',
       quickGuideTitle: 'Which number goes where?',
       quickGuideOverdueTerm: 'Cards overdue before today',
       quickGuideOverdueDefinition:
-        'Past-due unfinished cards. Find them with prop:due<=-1.',
+        'Past-due unfinished cards. Find them in Browse Cards mode with prop:due<=-1.',
       quickGuideReviewsTerm: 'Usual review cards due per day',
       quickGuideReviewsDefinition:
         'The normal Review demand on an ordinary day, excluding the overdue backlog and today’s new cards.',
@@ -488,9 +488,9 @@ export const en = {
     inputsHeading: 'Current inputs',
     inputInterpretationHeading: 'How these inputs were interpreted',
     overdueInputRule:
-      'Cards due before today and unfinished were treated as overdue. Cards due today and red or green card counts were not inferred; use prop:due<=-1 to find the overdue count.',
+      'Cards due before today and unfinished were treated as overdue. Cards due today and red or green card counts were not inferred; use prop:due<=-1 in Browse Cards mode to find the overdue count.',
     usualReviewsInputRule:
-      'Usual Review cards due were treated as an estimated card count excluding the entered overdue cards and new cards, not as the Anki Stats answer count.',
+      'Usual Review cards due were treated as an estimated card count excluding the entered overdue cards and new cards, not as the Anki Stats answer count. Overdue and usual-review estimates should use the same deck or collection scope.',
     breakdownHeading: 'Daily workload breakdown',
     scenariosHeading: 'Scenario comparison',
     recommendationHeading: 'Recommended first adjustment',

@@ -153,7 +153,7 @@ export const ja = {
         'これらが今日より前に期限を迎えたカードであることを確認してください。赤・緑の表示数が、そのままoverdueカード数になるわけではありません。',
       findOverdueTitle: 'この数値の確認方法',
       findOverdueIntro: 'Anki Desktopの場合：',
-      findOverdueStepBrowse: 'Browseを開きます。',
+      findOverdueStepBrowse: 'Browseを開き、Cardsモードにします。',
       findOverdueStepSearch: '次の条件で検索します：',
       findOverdueQuery: 'prop:due<=-1',
       findOverdueStepCount: '検索結果のカード数を使用します。',
@@ -164,11 +164,11 @@ export const ja = {
       dailyReviewStatsWarning:
         'Anki Statsの「review count」をそのまま入力しないでください。Statsは回答回数を数えるため、同じLearning・Relearningカードが複数回含まれることがあります。',
       dailyReviewEstimateNote:
-        '概算で構いません。Learning中のカードや難しいカードによって時間が長くなる場合は、「1レビューあたりの平均秒数」または難しいカードの設定へ反映してください。',
+        '概算で構いません。Learning中のカードや難しいカードによって時間が長くなる場合は、「1レビューあたりの平均秒数」または難しいカードの設定へ反映してください。期限超過カード数と普段のReviewカード数は、同じデッキまたはコレクション範囲で見積もってください。',
       quickGuideTitle: 'どの数値をどこへ入力しますか？',
       quickGuideOverdueTerm: '今日より前が期限の未処理カード',
       quickGuideOverdueDefinition:
-        '期限を過ぎても未処理のカードです。prop:due<=-1で確認できます。',
+        '期限を過ぎても未処理のカードです。BrowseのCardsモードでprop:due<=-1を使って確認できます。',
       quickGuideReviewsTerm: '普段その日に期限を迎えるレビュー数',
       quickGuideReviewsDefinition:
         '期限超過backlogとその日の新規カードを除いた、普段のReview負荷です。',
@@ -489,9 +489,9 @@ export const ja = {
     inputsHeading: '現在の入力',
     inputInterpretationHeading: '入力値の解釈',
     overdueInputRule:
-      '今日より前が期限で未処理のカードをoverdueとして扱います。今日が期限のカードや赤・緑の表示数からは推測しません。overdue数はprop:due<=-1で確認できます。',
+      '今日より前が期限で未処理のカードをoverdueとして扱います。今日が期限のカードや赤・緑の表示数からは推測しません。overdue数はBrowseのCardsモードでprop:due<=-1を使って確認できます。',
     usualReviewsInputRule:
-      '普段その日に期限を迎えるReviewカード数の概算として扱います。入力済みの期限超過カードと新規カードを除き、Anki Statsの回答回数はそのまま使用しません。',
+      '普段その日に期限を迎えるReviewカード数の概算として扱います。入力済みの期限超過カードと新規カードを除き、Anki Statsの回答回数はそのまま使用しません。期限超過と普段のReviewは、同じデッキまたはコレクション範囲で見積もります。',
     breakdownHeading: '1日の負荷内訳',
     scenariosHeading: '調整案の比較',
     recommendationHeading: '最初におすすめする調整',
