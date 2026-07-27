@@ -7,10 +7,15 @@ const LABELS: ExportLabels = {
   title: 'Plan',
   generated: 'Generated',
   inputs: 'Inputs',
+  inputInterpretation: 'How these inputs were interpreted',
+  overdueInputRule:
+    'Cards due before today and unfinished were treated as overdue. Cards due today and red or green card counts were not inferred; use prop:due<=-1 to find the overdue count.',
+  usualReviewsInputRule:
+    'Usual Review cards due were treated as an estimated card count excluding the entered overdue cards and new cards, not as the Anki Stats answer count.',
   results: 'Results',
   recommendation: 'Recommendation',
-  overdueBacklog: 'Overdue backlog',
-  typicalDailyReviews: 'Typical daily reviews',
+  overdueBacklog: 'Cards overdue before today',
+  typicalDailyReviews: 'Usual review cards due per day',
   dailyMinutes: 'Daily minutes',
   averageSeconds: 'Average seconds',
   newCardsPerDay: 'New cards per day',
@@ -33,12 +38,12 @@ const LABELS: ExportLabels = {
   withoutHardCardOverhead: 'without hard-card overhead',
   direction: 'Direction',
   backlogDirection: 'Backlog direction',
-  currentOverdueBacklog: 'Current overdue backlog',
+  currentOverdueBacklog: 'Cards entered as overdue before today',
   recurringMinutes: 'Recurring minutes',
   onePass: 'One pass',
   feasibility: 'Feasibility',
   unavailable: 'Not available',
-  noBacklog: 'No active overdue backlog',
+  noBacklog: 'No cards overdue before today were entered',
   estimateNote: 'Rough estimate only.',
   backlogReductionCapacity: 'Backlog reduction capacity',
   estimatedBacklogGrowth: 'Estimated backlog growth',
@@ -47,7 +52,7 @@ const LABELS: ExportLabels = {
   growthValue: '+{cardsPerDay}',
   flatValue: '{cardsPerDay}',
   fitsWithinOneDay:
-    'Only {backlog} are currently overdue, so this backlog fits within {studyDays}.',
+    'You entered {backlog} as overdue before today. At the entered time limit, one pass through that entered overdue backlog fits within {studyDays}. This does not mean all of today’s Learning, Relearning, and Review work will be finished.',
   studyDay: {
     one: '{count} study day',
     other: '{count} study days',
@@ -74,6 +79,11 @@ const JA_LABELS: ExportLabels = {
   title: 'Anki負荷プラン',
   generated: 'ブラウザ内で生成',
   inputs: '現在の入力',
+  inputInterpretation: '入力値の解釈',
+  overdueInputRule:
+    '今日より前が期限で未処理のカードをoverdueとして扱います。今日が期限のカードや赤・緑の表示数からは推測しません。overdue数はprop:due<=-1で確認できます。',
+  usualReviewsInputRule:
+    '普段その日に期限を迎えるReviewカード数の概算として扱います。入力済みの期限超過カードと新規カードを除き、Anki Statsの回答回数はそのまま使用しません。',
   results: 'サマリー',
   recommendation: '最初におすすめする調整',
   hardCardHeading: '難しいカードの負荷',
@@ -93,10 +103,10 @@ const JA_LABELS: ExportLabels = {
   hardCardOnePassUnchanged: '日数単位では変化なし',
   withoutHardCardOverhead: '難しいカードの追加負荷なし',
   backlogDirection: 'backlogの方向',
-  currentOverdueBacklog: '現在の期限超過backlog',
+  currentOverdueBacklog: '今日より前が期限として入力したカード',
   recurringMinutes: '継続的な1日の負荷',
-  onePass: '現在のbacklogを一巡するまでの推定日数',
-  noBacklog: '有効な期限超過backlogはありません',
+  onePass: '期限超過として入力したカードを一巡する推定学習日数',
+  noBacklog: '今日より前が期限の未処理カードは入力されていません',
   estimateNote: '概算値です。',
   backlogReductionCapacity: 'backlogを減らせる上限',
   estimatedBacklogGrowth: 'backlogの推定増加',
@@ -105,7 +115,7 @@ const JA_LABELS: ExportLabels = {
   growthValue: '1日あたり+{cards}',
   flatValue: '1日あたり{cards}',
   fitsWithinOneDay:
-    '現在の期限超過backlogは{backlog}のため、{studyDays}以内に一巡できる見込みです。',
+    '今日より前が期限の未処理カードとして{backlog}が入力されています。入力した時間上限では、その{backlog}を1回ずつ処理する作業は{studyDays}以内に収まる見込みです。これは、今日のLearning・Relearning・Reviewを含むAnki作業全体が終わるという意味ではありません。',
   studyDay: {
     one: '{count}学習日',
     other: '{count}学習日',
@@ -275,22 +285,28 @@ describe('plan Markdown export', () => {
 
     if (locale === 'en') {
       expect(markdown).toContain('- Backlog direction: Shrinking')
-      expect(markdown).toContain('- Current overdue backlog: 6 cards')
+      expect(markdown).toContain('- Cards entered as overdue before today: 6 cards')
       expect(markdown).toContain('- Backlog reduction capacity: Up to 90.2 cards/day')
       expect(markdown).toContain('- One pass: 1 study day')
       expect(markdown).toContain(
-        'Only 6 cards are currently overdue, so this backlog fits within 1 study day.',
+        'You entered 6 cards as overdue before today. At the entered time limit, one pass through that entered overdue backlog fits within 1 study day.',
       )
+      expect(markdown).toContain('This does not mean all of today’s Learning, Relearning, and Review work will be finished.')
+      expect(markdown).toContain('prop:due<=-1')
+      expect(markdown).toContain('not as the Anki Stats answer count')
       expect(markdown).not.toContain('1 study days')
       expect(markdown).not.toContain('-90.2 cards/day')
     } else {
       expect(markdown).toContain('- backlogの方向: 減少')
-      expect(markdown).toContain('- 現在の期限超過backlog: 6枚')
+      expect(markdown).toContain('- 今日より前が期限として入力したカード: 6枚')
       expect(markdown).toContain('- backlogを減らせる上限: 1日あたり最大90.2枚')
-      expect(markdown).toContain('- 現在のbacklogを一巡するまでの推定日数: 1学習日')
+      expect(markdown).toContain('- 期限超過として入力したカードを一巡する推定学習日数: 1学習日')
       expect(markdown).toContain(
-        '現在の期限超過backlogは6枚のため、1学習日以内に一巡できる見込みです。',
+        '今日より前が期限の未処理カードとして6枚が入力されています。入力した時間上限では、その6枚を1回ずつ処理する作業は1学習日以内に収まる見込みです。',
       )
+      expect(markdown).toContain('Anki作業全体が終わるという意味ではありません')
+      expect(markdown).toContain('prop:due<=-1')
+      expect(markdown).toContain('Anki Statsの回答回数はそのまま使用しません')
     }
   })
 
@@ -321,7 +337,15 @@ describe('plan Markdown export', () => {
     expect(markdown).not.toContain('2 study day\n')
   })
 
-  it('does not export a catch-up duration or negative change for zero backlog', () => {
+  it.each([
+    ['en' as const, LABELS, 'Shrinking', 'Comfortable'],
+    ['ja' as const, JA_LABELS, '減少', '余裕あり'],
+  ])('does not export a catch-up duration or negative change for zero backlog in %s', (
+    locale,
+    labels,
+    direction,
+    feasibility,
+  ) => {
     const today = new Date(2026, 6, 26)
     const inputs = {
       ...getDefaultPlannerInputs(today),
@@ -335,16 +359,18 @@ describe('plan Markdown export', () => {
     const markdown = buildPlanMarkdown(
       inputs,
       calculatePlanner(inputs, today),
-      'en',
-      LABELS,
-      'Shrinking',
-      'Comfortable',
-      'Keep going.',
+      locale,
+      labels,
+      direction,
+      feasibility,
+      locale === 'ja' ? '現在のペースを維持します。' : 'Keep going.',
       today,
     )
 
-    expect(markdown).toContain('- One pass: No active overdue backlog')
-    expect(markdown).not.toContain('0 study days')
+    expect(markdown).toContain(locale === 'ja'
+      ? '- 期限超過として入力したカードを一巡する推定学習日数: 今日より前が期限の未処理カードは入力されていません'
+      : '- One pass: No cards overdue before today were entered')
+    expect(markdown).not.toContain(locale === 'ja' ? '0学習日' : '0 study days')
     expect(markdown).not.toMatch(/-\d+(?:\.\d+)? cards\/day/)
   })
 })

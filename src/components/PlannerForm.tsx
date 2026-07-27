@@ -22,6 +22,29 @@ export type PlannerFormLabels = {
     collapsedShort: string
     minutesPerDay: string
   }
+  inputSemantics: {
+    overdueColorWarning: string
+    overdueConfirmation: string
+    findOverdueTitle: string
+    findOverdueIntro: string
+    findOverdueStepBrowse: string
+    findOverdueStepSearch: string
+    findOverdueQuery: string
+    findOverdueStepCount: string
+    findOverdueExplanation: string
+    findOverdueDoNotGuess: string
+    dailyReviewStatsWarning: string
+    dailyReviewEstimateNote: string
+    quickGuideTitle: string
+    quickGuideOverdueTerm: string
+    quickGuideOverdueDefinition: string
+    quickGuideReviewsTerm: string
+    quickGuideReviewsDefinition: string
+    quickGuideNewCardsTerm: string
+    quickGuideNewCardsDefinition: string
+    quickGuideSecondsTerm: string
+    quickGuideSecondsDefinition: string
+  }
   daysOff: string
   daysOffHelp: string
   weekdays: string[]
@@ -92,6 +115,81 @@ export function PlannerForm({ inputs, errors, labels, locale, onChange }: Planne
       onChange={(value) => update(field, value as never)}
     />
   )
+  const renderSimpleField = (
+    field: keyof Omit<PlannerInputs, 'daysOff'>,
+  ) => {
+    if (field === 'overdueBacklog') {
+      const hasEnteredOverdueCards = validNonNegative(inputs.overdueBacklog) > 0
+      return (
+        <div className="min-w-0" key={field}>
+          {renderField(
+            field,
+            [
+              'planner-overdue-color-warning',
+              hasEnteredOverdueCards ? 'planner-overdue-confirmation' : '',
+            ].filter(Boolean).join(' '),
+          )}
+          <p
+            className="mt-2 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs font-medium leading-5 text-amber-950"
+            id="planner-overdue-color-warning"
+          >
+            {labels.inputSemantics.overdueColorWarning}
+          </p>
+          {hasEnteredOverdueCards ? (
+            <p
+              className="mt-2 text-xs leading-5 text-slate-600"
+              id="planner-overdue-confirmation"
+            >
+              {labels.inputSemantics.overdueConfirmation}
+            </p>
+          ) : null}
+          <details className="group quiet-surface mt-2 overflow-hidden">
+            <summary className="flex min-h-11 cursor-pointer list-none items-center justify-between gap-3 px-3 py-2.5 text-xs font-semibold text-teal-800">
+              {labels.inputSemantics.findOverdueTitle}
+              <span className="grid h-7 w-7 shrink-0 place-items-center rounded-lg bg-white text-lg leading-none text-slate-500 transition group-open:rotate-45" aria-hidden="true">+</span>
+            </summary>
+            <div className="border-t border-slate-200/70 px-3 pb-3 pt-3 text-xs leading-5 text-slate-600">
+              <p>{labels.inputSemantics.findOverdueIntro}</p>
+              <ol className="mt-2 list-decimal space-y-1 pl-5">
+                <li>{labels.inputSemantics.findOverdueStepBrowse}</li>
+                <li>
+                  {labels.inputSemantics.findOverdueStepSearch}{' '}
+                  <code className="select-text rounded bg-white px-1.5 py-1 font-mono text-[0.75rem] font-semibold text-slate-900 ring-1 ring-inset ring-slate-200">
+                    {labels.inputSemantics.findOverdueQuery}
+                  </code>
+                </li>
+                <li>{labels.inputSemantics.findOverdueStepCount}</li>
+              </ol>
+              <p className="mt-2">{labels.inputSemantics.findOverdueExplanation}</p>
+              <p className="mt-2 font-medium text-slate-800">{labels.inputSemantics.findOverdueDoNotGuess}</p>
+            </div>
+          </details>
+        </div>
+      )
+    }
+
+    if (field === 'typicalDailyReviews') {
+      return (
+        <div className="min-w-0" key={field}>
+          {renderField(field, 'planner-typical-review-stats-help planner-typical-review-estimate-help')}
+          <p
+            className="mt-2 text-xs font-medium leading-5 text-slate-700"
+            id="planner-typical-review-stats-help"
+          >
+            {labels.inputSemantics.dailyReviewStatsWarning}
+          </p>
+          <p
+            className="mt-2 text-xs leading-5 text-slate-500"
+            id="planner-typical-review-estimate-help"
+          >
+            {labels.inputSemantics.dailyReviewEstimateNote}
+          </p>
+        </div>
+      )
+    }
+
+    return <div className="min-w-0" key={field}>{renderField(field)}</div>
+  }
 
   return (
     <section className="panel" aria-labelledby="planner-input-heading">
@@ -102,8 +200,28 @@ export function PlannerForm({ inputs, errors, labels, locale, onChange }: Planne
       </div>
 
       <div className="mt-5 grid gap-x-4 gap-y-4 sm:grid-cols-2 lg:grid-cols-1">
-        {SIMPLE_FIELDS.map((field) => renderField(field))}
+        {SIMPLE_FIELDS.map(renderSimpleField)}
       </div>
+
+      <details className="group quiet-surface mt-4 overflow-hidden">
+        <summary className="flex min-h-11 cursor-pointer list-none items-center justify-between gap-3 px-3.5 py-2.5 text-xs font-semibold text-slate-700">
+          {labels.inputSemantics.quickGuideTitle}
+          <span className="grid h-7 w-7 shrink-0 place-items-center rounded-lg bg-white text-lg leading-none text-slate-500 transition group-open:rotate-45" aria-hidden="true">+</span>
+        </summary>
+        <dl className="grid gap-3 border-t border-slate-200/70 px-3.5 py-3.5 text-xs leading-5 sm:grid-cols-2 lg:grid-cols-1">
+          {[
+            [labels.inputSemantics.quickGuideOverdueTerm, labels.inputSemantics.quickGuideOverdueDefinition],
+            [labels.inputSemantics.quickGuideReviewsTerm, labels.inputSemantics.quickGuideReviewsDefinition],
+            [labels.inputSemantics.quickGuideNewCardsTerm, labels.inputSemantics.quickGuideNewCardsDefinition],
+            [labels.inputSemantics.quickGuideSecondsTerm, labels.inputSemantics.quickGuideSecondsDefinition],
+          ].map(([term, definition]) => (
+            <div key={term}>
+              <dt className="font-semibold text-slate-800">{term}</dt>
+              <dd className="mt-0.5 text-slate-600">{definition}</dd>
+            </div>
+          ))}
+        </dl>
+      </details>
 
       <details className="group quiet-surface mt-6 overflow-hidden">
         <summary className="flex min-h-11 cursor-pointer list-none items-center justify-between gap-3 px-3.5 py-2.5 text-xs font-semibold text-slate-700">

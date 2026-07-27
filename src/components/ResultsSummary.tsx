@@ -1,5 +1,6 @@
 import type { PlanMetrics } from '../types/planner'
 import { formatUnitCount, type PluralForms } from '../i18n'
+import { getOnePassExplanation } from '../lib/backlogPresentation'
 
 export type SummaryLabels = {
   eyebrow: string
@@ -14,6 +15,8 @@ export type SummaryLabels = {
   adjustmentAnswer: string
   onePassUnavailable: string
   onePassComplete: string
+  fitsWithinOneDay: string
+  card: PluralForms
   studyDay: PluralForms
 }
 
@@ -23,6 +26,7 @@ export function ResultsSummary({ metrics, labels, locale, recommendation }: { me
     : metrics.onePassDays === null
       ? labels.onePassUnavailable
       : formatUnitCount(metrics.onePassDays, locale, labels.studyDay)
+  const onePassExplanation = getOnePassExplanation(metrics, locale, labels)
   const directionTone = metrics.direction === 'shrinking'
     ? 'border-teal-200 bg-teal-50 text-teal-950'
     : metrics.direction === 'flat'
@@ -41,7 +45,8 @@ export function ResultsSummary({ metrics, labels, locale, recommendation }: { me
 
       <p className="sr-only" aria-atomic="true" aria-live="polite">
         {labels.causeQuestion} {labels.causeAnswer} {labels.directionQuestion} {labels.directionAnswer}{' '}
-        {labels.adjustmentQuestion} {labels.adjustmentAnswer || recommendation} {labels.onePassQuestion} {onePass}
+        {labels.adjustmentQuestion} {labels.adjustmentAnswer || recommendation} {labels.onePassQuestion} {onePass}{' '}
+        {onePassExplanation ?? labels.estimateNote}
       </p>
 
       <dl className="mt-5 grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
@@ -66,6 +71,7 @@ export function ResultsSummary({ metrics, labels, locale, recommendation }: { me
         <div className="rounded-xl border border-slate-200 bg-white p-4 sm:col-span-2 xl:col-span-1">
           <dt className="text-xs font-semibold leading-5 text-slate-500">{labels.onePassQuestion}</dt>
           <dd className="mt-2 break-words text-xl font-semibold tracking-[-0.03em] text-slate-950 tabular-nums sm:text-2xl">{onePass}</dd>
+          {onePassExplanation ? <dd className="mt-2 text-xs leading-5 text-slate-600">{onePassExplanation}</dd> : null}
         </div>
       </dl>
     </section>

@@ -16,6 +16,7 @@ export type TrendLabels = {
   cancelEdit: string
   date: string
   overdue: string
+  overdueHelp: string
   dueToday: string
   queue: string
   hardCards: string
@@ -170,7 +171,7 @@ export function BacklogTrend({ inputs, snapshots, labels, locale, onChange }: { 
         </summary>
         <div className="grid gap-4 border-t border-slate-200 p-4 sm:grid-cols-2 xl:grid-cols-3">
           <SnapshotField id="snapshot-date" label={labels.date} type="date" value={draft.date} required error={showValidation ? draftErrors.date : undefined} onChange={(value) => updateDraft({ date: value })} />
-          <SnapshotField id="snapshot-overdue" label={labels.overdue} value={draft.overdueBacklog} required error={showValidation ? draftErrors.overdueBacklog : undefined} onChange={(value) => updateDraft({ overdueBacklog: value })} />
+          <SnapshotField id="snapshot-overdue" label={labels.overdue} helper={labels.overdueHelp} value={draft.overdueBacklog} required error={showValidation ? draftErrors.overdueBacklog : undefined} onChange={(value) => updateDraft({ overdueBacklog: value })} />
           <SnapshotField id="snapshot-due-today" label={labels.dueToday} value={draft.dueToday} error={showValidation ? draftErrors.dueToday : undefined} onChange={(value) => updateDraft({ dueToday: value })} />
           <SnapshotField id="snapshot-queue" label={labels.queue} value={draft.schedulerQueueNow} error={showValidation ? draftErrors.schedulerQueueNow : undefined} onChange={(value) => updateDraft({ schedulerQueueNow: value })} />
           <SnapshotField id="snapshot-hard-cards" label={labels.hardCards} value={draft.hardCardCount} error={showValidation ? draftErrors.hardCardCount : undefined} onChange={(value) => updateDraft({ hardCardCount: value })} />
@@ -239,8 +240,9 @@ export function BacklogTrend({ inputs, snapshots, labels, locale, onChange }: { 
   )
 }
 
-function SnapshotField({ id, label, value, error, required = false, type = 'number', onChange }: { id: string; label: string; value: NumericDraftValue; error?: string; required?: boolean; type?: 'date' | 'number'; onChange: (value: string) => void }) {
+function SnapshotField({ id, label, helper, value, error, required = false, type = 'number', onChange }: { id: string; label: string; helper?: string; value: NumericDraftValue; error?: string; required?: boolean; type?: 'date' | 'number'; onChange: (value: string) => void }) {
   const errorId = `${id}-error`
+  const helpId = `${id}-help`
   const safeValue = typeof value === 'number' && !Number.isFinite(value) ? '' : value
   return (
     <label className="block" htmlFor={id}>
@@ -254,10 +256,11 @@ function SnapshotField({ id, label, value, error, required = false, type = 'numb
         min={type === 'number' ? 0 : undefined}
         max={type === 'number' ? MAX_SNAPSHOT_VALUE : undefined}
         step={type === 'number' ? 1 : undefined}
-        aria-describedby={error ? errorId : undefined}
+        aria-describedby={[helper ? helpId : '', error ? errorId : ''].filter(Boolean).join(' ') || undefined}
         aria-invalid={Boolean(error)}
         onChange={(event) => onChange(event.currentTarget.value)}
       />
+      {helper ? <span className="mt-1.5 block text-xs leading-5 text-slate-500" id={helpId}>{helper}</span> : null}
       {error ? <span className="mt-1.5 block text-xs font-medium leading-5 text-rose-800" id={errorId} role="alert">{error}</span> : null}
     </label>
   )

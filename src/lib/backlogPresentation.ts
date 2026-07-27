@@ -22,6 +22,28 @@ export type BacklogMetricPresentation = {
   note?: string
 }
 
+export type OnePassExplanationLabels = Pick<
+  BacklogMetricLabels,
+  'fitsWithinOneDay' | 'card' | 'studyDay'
+>
+
+export function getOnePassExplanation(
+  metrics: PlanMetrics,
+  locale: 'en' | 'ja',
+  labels: OnePassExplanationLabels,
+): string | undefined {
+  const fitsWithinOneDay =
+    metrics.activeBacklog > 0 &&
+    metrics.onePassDays === 1 &&
+    metrics.actualNextStudyDayReduction === metrics.activeBacklog
+  if (!fitsWithinOneDay) return undefined
+
+  return interpolate(labels.fitsWithinOneDay, {
+    backlog: formatUnitCount(metrics.activeBacklog, locale, labels.card),
+    studyDays: formatUnitCount(1, locale, labels.studyDay),
+  })
+}
+
 export function getBacklogMetricPresentation(
   metrics: PlanMetrics,
   locale: 'en' | 'ja',
@@ -47,21 +69,14 @@ export function getBacklogMetricPresentation(
       labels.card,
       1,
     )
-    const fitsWithinOneDay =
-      metrics.onePassDays === 1 &&
-      metrics.actualNextStudyDayReduction === metrics.activeBacklog
+    const onePassExplanation = getOnePassExplanation(metrics, locale, labels)
     return {
       label: labels.backlogReductionCapacity,
       value: interpolate(labels.reductionCapacityValue, {
         cardsPerDay,
         cards,
       }),
-      note: fitsWithinOneDay
-        ? interpolate(labels.fitsWithinOneDay, {
-            backlog: formatUnitCount(metrics.activeBacklog, locale, labels.card),
-            studyDays: formatUnitCount(1, locale, labels.studyDay),
-          })
-        : labels.estimateNote,
+      note: onePassExplanation ?? labels.estimateNote,
     }
   }
 

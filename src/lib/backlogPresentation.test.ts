@@ -45,7 +45,7 @@ describe('backlog metric presentation', () => {
     expect(presentation).toEqual({
       label: 'Backlog reduction capacity',
       value: 'Up to 90.2 cards/day',
-      note: 'Only 6 cards are currently overdue, so this backlog fits within 1 study day.',
+      note: 'You entered 6 cards as overdue before today. At the entered time limit, one pass through that entered overdue backlog fits within 1 study day. This does not mean all of today’s Learning, Relearning, and Review work will be finished.',
     })
     expect(presentation.value).not.toContain('-90.2')
   })
@@ -99,7 +99,7 @@ describe('backlog metric presentation', () => {
     expect(metrics.actualNextStudyDayReduction).toBe(0)
     expect(presentation).toEqual({
       label: 'Estimated backlog change',
-      value: 'No active overdue backlog',
+      value: 'No cards overdue before today were entered',
     })
   })
 
@@ -110,10 +110,19 @@ describe('backlog metric presentation', () => {
     expect(presentation).toEqual({
       label: 'backlogを減らせる上限',
       value: '1日あたり最大90.2枚',
-      note: '現在の期限超過backlogは6枚のため、1学習日以内に一巡できる見込みです。',
+      note: '今日より前が期限の未処理カードとして6枚が入力されています。入力した時間上限では、その6枚を1回ずつ処理する作業は1学習日以内に収まる見込みです。これは、今日のLearning・Relearning・Reviewを含むAnki作業全体が終わるという意味ではありません。',
     })
     expect(presentation.value).not.toContain(' 枚')
     expect(presentation.note).not.toContain(' 学習日')
     expect(ja.scenarios.current.estimatedBacklogGrowth).toBe('backlogの推定増加')
+  })
+
+  it('uses a grammatically safe entered-value explanation for one card', () => {
+    const metrics = calculatePlanner(inputs({ overdueBacklog: 1 }), TODAY).current
+    const presentation = getBacklogMetricPresentation(metrics, 'en', labels('en'))
+
+    expect(presentation.note).toContain('You entered 1 card as overdue before today')
+    expect(presentation.note).toContain('one pass through that entered overdue backlog')
+    expect(presentation.note).not.toContain('1 card are')
   })
 })

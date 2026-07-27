@@ -43,9 +43,9 @@ describe('translation dictionaries', () => {
 
   it('includes the required one-pass and trust language in both locales', () => {
     expect(en.summary.onePassLabel).toBe(
-      'Estimated days to complete one pass through the current backlog',
+      'Estimated study days for one pass through entered overdue cards',
     )
-    expect(ja.summary.onePassLabel).toBe('現在のbacklogを一巡するまでの推定日数')
+    expect(ja.summary.onePassLabel).toBe('期限超過として入力したカードを一巡する推定学習日数')
     expect(en.trust.strip).toBe('Browser-only · No login · No uploads · No AI')
     expect(ja.trust.strip).toBe(
       'ブラウザ内で完結 · ログイン不要 · アップロードなし · AI不使用',
@@ -68,6 +68,40 @@ describe('translation dictionaries', () => {
     expect(ja.form.fields.extraSecondsPerHardReview.helper).toContain('推定に使用')
     expect(ja.form.hardCards.previewMissingReviews).toContain('追加時間は計算に含まれていません')
     expect(ja.export.hardCardNoDailyOverheadCountContext).toContain('参考情報として記録')
+  })
+
+  it('defines the two Anki workload inputs without relying on colors or Stats answer counts', () => {
+    expect(en.form.fields.overdueBacklog.label).toBe('Cards overdue before today')
+    expect(ja.form.fields.overdueBacklog.label).toBe('今日より前が期限の未処理カード')
+    expect(en.form.fields.overdueBacklog.helper).toContain('Cards due today are not included')
+    expect(ja.form.fields.overdueBacklog.helper).toContain('今日が期限のカードは含めません')
+
+    expect(en.form.inputSemantics.findOverdueQuery).toBe('prop:due<=-1')
+    expect(ja.form.inputSemantics.findOverdueQuery).toBe('prop:due<=-1')
+    expect(en.form.inputSemantics.overdueColorWarning).toContain('red or green')
+    expect(ja.form.inputSemantics.overdueColorWarning).toContain('赤・緑')
+    expect(en.glossary.colorQuestion).toBe('Are overdue cards red or green?')
+    expect(ja.glossary.colorQuestion).toBe('overdueカードは赤ですか、緑ですか？')
+
+    expect(en.form.fields.typicalDailyReviews.label).toBe('Usual review cards due per day')
+    expect(ja.form.fields.typicalDailyReviews.label).toBe('普段その日に期限を迎えるレビュー数')
+    expect(en.form.fields.typicalDailyReviews.helper).toContain('without counting the overdue cards')
+    expect(en.form.fields.typicalDailyReviews.helper).toContain('new cards')
+    expect(ja.form.fields.typicalDailyReviews.helper).toContain('期限超過カード')
+    expect(ja.form.fields.typicalDailyReviews.helper).toContain('新規カード')
+    expect(en.form.inputSemantics.dailyReviewStatsWarning).toContain('counts each answer')
+    expect(en.form.inputSemantics.dailyReviewStatsWarning).toContain('more than once')
+    expect(ja.form.inputSemantics.dailyReviewStatsWarning).toContain('回答回数')
+    expect(ja.form.inputSemantics.dailyReviewStatsWarning).toContain('複数回')
+  })
+
+  it('never defines red or green as universally overdue', () => {
+    for (const dictionary of [en, ja]) {
+      const text = leafEntries(dictionary).map(([, value]) => String(value)).join('\n').toLowerCase()
+      expect(text).not.toMatch(/red\s*=\s*overdue|green\s*=\s*overdue/)
+      expect(text).not.toContain('赤＝overdue')
+      expect(text).not.toContain('緑＝overdue')
+    }
   })
 })
 

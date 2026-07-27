@@ -216,6 +216,29 @@ describe('workload planner', () => {
     expect(contextual.current.recurringDailySeconds).toBe(baseline.current.recurringDailySeconds)
   })
 
+  it('keeps the corrected zero-backlog interpretation separate from usual reviews and new cards', () => {
+    const result = calculatePlanner(
+      input({
+        overdueBacklog: 0,
+        typicalDailyReviews: 17,
+        dueToday: 20,
+        schedulerQueueNow: 20,
+        dailyMinutes: 28.3,
+        averageSecondsPerReview: 15,
+        newCardsPerDay: 6,
+        newCardReviewEquivalent: 1.5,
+      }),
+      TODAY,
+    )
+
+    expect(result.current.activeBacklog).toBe(0)
+    expect(result.current.normalRecurringReviewSeconds).toBe(255)
+    expect(result.current.newCardReviewSecondsPerDay).toBe(135)
+    expect(result.current.recurringDailySeconds).toBe(390)
+    expect(result.current.onePassDays).toBe(0)
+    expect(result.current.actualNextStudyDayReduction).toBe(0)
+  })
+
   it('planned cards increase workload and spread with ceil', () => {
     const result = calculatePlanner(
       input({ plannedAdditionalCards: 800, plannedAdditionalCardsDays: 7 }),

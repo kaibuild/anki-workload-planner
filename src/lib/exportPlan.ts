@@ -7,6 +7,9 @@ export type ExportLabels = {
   title: string
   generated: string
   inputs: string
+  inputInterpretation: string
+  overdueInputRule: string
+  usualReviewsInputRule: string
   results: string
   recommendation: string
   overdueBacklog: string
@@ -116,6 +119,11 @@ export function buildPlanMarkdown(
     `- ${labels.averageSeconds}: ${decimal.format(inputs.averageSecondsPerReview)}`,
     `- ${labels.newCardsPerDay}: ${number.format(inputs.newCardsPerDay)}`,
     `- ${labels.targetDate}: ${targetDate}`,
+    '',
+    `### ${labels.inputInterpretation}`,
+    '',
+    `- ${labels.overdueInputRule}`,
+    `- ${labels.usualReviewsInputRule}`,
     '',
     `## ${labels.hardCardHeading}`,
     '',

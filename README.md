@@ -14,7 +14,7 @@ Source repository: [https://github.com/kaibuild/anki-workload-planner](https://g
 
 Open the [live application](https://anki-workload-planner.pages.dev). On a first visit, Japanese browser preferences open the Japanese planner, English preferences open the English planner, and unsupported languages fall back to English. You can switch languages at any time without losing the current page or entered data.
 
-1. Enter the overdue backlog and your normal daily review workload on **Plan**.
+1. On **Plan**, enter cards due before today that remain unfinished, plus the usual Review cards due on an ordinary day.
 2. Review the workload source, backlog direction, recommended first adjustment, and estimated one-pass duration.
 3. Save optional daily snapshots on **Backlog trend**, and export data only when you want a portable copy.
 
@@ -75,7 +75,10 @@ Data may still be visible to anyone with access to the same device and browser p
 
 These inputs deliberately remain separate:
 
-- **Overdue backlog:** active cards due before today. This is the genuine backlog used by backlog and trend calculations.
+- **Cards overdue before today:** unfinished cards whose due date was before the current Anki study day. Cards due today are not included. In Anki Desktop Browse, search [`prop:due<=-1`](https://docs.ankiweb.net/searching.html#card-properties) and use the number of matching cards.
+- **Red or green counts:** color alone does not define overdue status. Do not copy a colored queue count into the overdue field.
+- **Usual review cards due per day:** a normal-day estimate of Review cards due, excluding the overdue cards entered separately and new cards introduced that day.
+- **Anki Stats review count:** this is a count of answers, not unique due cards. The same Learning or Relearning card may count more than once, so do not paste it directly into the usual-review field. See the [official Statistics definition](https://docs.ankiweb.net/stats.html#today).
 - **Due today:** cards scheduled for today. It is shown for context and is never automatically added to overdue backlog.
 - **Scheduler queue:** cards Anki currently offers in the active session. It may change during a review session and is never used to derive genuine backlog.
 - **Hard or leech cards:** cards that repeatedly fail or take much longer than normal. The known total is context only. The estimate uses hard-card reviews per day × extra seconds per hard review, and does not judge individual cards.
@@ -87,6 +90,7 @@ Finishing the current scheduler queue is not presented as finishing all Anki wor
 The calculation engine is pure TypeScript and uses the entered planning assumptions. Let:
 
 - `overdueBacklog` be genuine overdue cards.
+- `typicalDailyReviews` be the estimated usual Review cards due per day, not the Anki Stats answer count.
 - `potentiallyTriagedCards` be cards removed from the planning scope for comparison only.
 - `dailyMinutes` be the daily time limit.
 - `averageSecondsPerReview` be the typical review duration.
@@ -132,7 +136,7 @@ When backlog-reduction capacity is positive:
 onePassDays = ceil(activeBacklog / backlogReductionCardsPerDay)
 ```
 
-This result is labeled **“Estimated days to complete one pass through the current backlog.”** It is not an exact recovery or fully-caught-up date.
+This result is labeled **“Estimated study days for one pass through entered overdue cards.”** For a one-day result, the app explicitly limits the statement to the cards entered as overdue before today. It does not mean all Learning, Relearning, and Review work for that day will be finished, and it is not an exact recovery or fully-caught-up date.
 
 For the target-date plan, local calendar dates are counted consistently and selected days off are excluded. The planner then calculates:
 
@@ -272,7 +276,7 @@ The project is available under the [MIT License](./LICENSE).
 
 [公開アプリ](https://anki-workload-planner.pages.dev)を開いてください。初回アクセス時は、ブラウザの言語設定が日本語なら日本語版、英語なら英語版、未対応言語なら英語版を表示します。言語はいつでも切り替えられ、現在のページや入力内容は保持されます。
 
-1. **プラン**で期限超過backlogと普段のレビュー負荷を入力します。
+1. **プラン**で、今日より前が期限の未処理カードと、普段その日に期限を迎えるReviewカード数を入力します。
 2. 負荷の主因、backlogの増減方向、最初に試す調整、一巡までの推定日数を確認します。
 3. 必要に応じて**backlogの推移**で日次スナップショットを保存し、持ち運べるコピーが必要な場合だけ書き出します。
 
@@ -333,7 +337,10 @@ Anki負荷プランナーは、手入力した数値を基に、上記4点を透
 
 次の数値は意図的に分けて扱います。
 
-- **期限超過backlog：** 今日より前が期限で、まだ有効なカード。backlog計算とtrend計算に使う実際のbacklogです。
+- **今日より前が期限の未処理カード：** 今日より前が期限だったのに未処理のカードです。今日が期限のカードは含めません。Anki DesktopのBrowseで[`prop:due<=-1`](https://docs.ankiweb.net/searching.html#card-properties)を検索し、該当カード数を使います。
+- **赤・緑などの表示数：** 色だけではoverdueを判断できません。色付きqueueの件数を、期限超過入力へそのまま転記しないでください。
+- **普段その日に期限を迎えるレビュー数：** 別に入力した期限超過カードと、その日に追加する新規カードを除いた、普段の日のReviewカード数の概算です。
+- **Anki Statsのreview count：** uniqueなカード数ではなく回答回数です。同じLearning・Relearningカードが複数回含まれることがあるため、普段のレビュー入力へそのまま転記しないでください。詳しくは[公式Statisticsの定義](https://docs.ankiweb.net/stats.html#today)をご覧ください。
 - **今日が期限のカード：** 今日に設定されたカード。参考表示のみで、期限超過backlogへ自動加算しません。
 - **scheduler queue：** 現在のセッションでAnkiが提示しているカード。レビュー中に変化することがあり、実際のbacklogの算出には使いません。
 - **leech・難しいカード：** 繰り返し失敗する、または通常より時間がかかるカード。既知の総数は参考情報のみです。追加時間は「1日あたりの難しいカードのレビュー数 × 1レビューあたりの追加秒数」で概算し、個別カードの良し悪しは判定しません。
@@ -343,6 +350,8 @@ Anki負荷プランナーは、手入力した数値を基に、上記4点を透
 ### 計算方法
 
 計算engineはpure TypeScriptで実装し、入力した前提だけを使います。主な計算は次のとおりです。
+
+`typicalDailyReviews`は、普段その日に期限を迎えるReviewカード数の概算です。Anki Statsの回答回数を表す値ではありません。
 
 ```text
 currentActiveBacklog = overdueBacklog
@@ -374,7 +383,7 @@ backlogを減らす余力がある場合は、次の式を使います。
 onePassDays = ceil(activeBacklog / backlogReductionCardsPerDay)
 ```
 
-画面では**「現在のbacklogを一巡するまでの推定日数」**と表示します。正確な復帰日や「完全に追いつく日」を示すものではありません。
+画面では**「期限超過として入力したカードを一巡する推定学習日数」**と表示します。1学習日の場合も、今日より前が期限として入力したカードだけを1回ずつ処理する意味です。今日のLearning・Relearning・Reviewを含むAnki作業全体が終わる意味ではなく、正確な復帰日も示しません。
 
 目標日プランでは、local calendarの日付を一貫して数え、選択した休み曜日を除外します。
 

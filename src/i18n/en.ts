@@ -59,14 +59,14 @@ export const en = {
     requiredHint: 'Required fields are marked.',
     fields: {
       overdueBacklog: {
-        label: 'Overdue backlog',
+        label: 'Cards overdue before today',
         helper:
-          'Cards that were due before today and are still active. Do not include cards that are only due today.',
+          'Enter cards that were due before today and are still unfinished. Cards due today are not included.',
       },
       typicalDailyReviews: {
-        label: 'Typical daily reviews',
+        label: 'Usual review cards due per day',
         helper:
-          'Your normal recurring review demand, excluding the overdue backlog and new cards.',
+          'Estimate the normal review cards you usually need to study on a day without counting the overdue cards entered above or the new cards you introduce that day.',
       },
       dailyMinutes: {
         label: 'Daily time limit',
@@ -82,7 +82,7 @@ export const en = {
       },
       targetDate: {
         label: 'Target date',
-        helper: 'The date by which you want to complete one pass through this backlog.',
+        helper: 'The date by which you want to complete one pass through the cards entered as overdue.',
       },
       dueToday: {
         label: 'Cards due today',
@@ -145,6 +145,39 @@ export const en = {
       collapsedIncluded: 'Hard-card overhead included',
       collapsedShort: 'Hard cards',
     },
+    inputSemantics: {
+      overdueColorWarning:
+        'Do not use red or green card counts here. Color alone does not tell you whether a card is overdue.',
+      overdueConfirmation:
+        'Make sure these cards were due before today. Red or green card counts are not automatically overdue cards.',
+      findOverdueTitle: 'How do I find this number?',
+      findOverdueIntro: 'In Anki Desktop:',
+      findOverdueStepBrowse: 'Open Browse.',
+      findOverdueStepSearch: 'Search for:',
+      findOverdueQuery: 'prop:due<=-1',
+      findOverdueStepCount: 'Use the number of matching cards.',
+      findOverdueExplanation:
+        'This search finds cards that were due before today and are still overdue.',
+      findOverdueDoNotGuess:
+        'If you cannot confirm this number, do not guess it from card colors.',
+      dailyReviewStatsWarning:
+        'Do not automatically paste Anki Stats “review count” here. Stats counts each answer, so the same Learning or Relearning card may be counted more than once.',
+      dailyReviewEstimateNote:
+        'An estimate is fine. If Learning or difficult cards make each session slower, reflect that in “Average seconds per review” or the hard-card settings.',
+      quickGuideTitle: 'Which number goes where?',
+      quickGuideOverdueTerm: 'Cards overdue before today',
+      quickGuideOverdueDefinition:
+        'Past-due unfinished cards. Find them with prop:due<=-1.',
+      quickGuideReviewsTerm: 'Usual review cards due per day',
+      quickGuideReviewsDefinition:
+        'The normal Review demand on an ordinary day, excluding the overdue backlog and today’s new cards.',
+      quickGuideNewCardsTerm: 'New cards per day',
+      quickGuideNewCardsDefinition:
+        'The number of new cards you intentionally introduce each day.',
+      quickGuideSecondsTerm: 'Average seconds per review',
+      quickGuideSecondsDefinition:
+        'The approximate time each answer takes. Use a higher value for long sentence cards.',
+    },
     weekdays: {
       monday: 'Monday',
       tuesday: 'Tuesday',
@@ -178,7 +211,7 @@ export const en = {
     extreme: 'Extreme workload',
     growing: 'Workload growing',
     plannedAddition: 'Planned deck addition',
-    loaded: 'Demo data loaded.',
+    loaded: 'Demo data loaded using the input definitions shown above.',
   },
   summary: {
     heading: 'Your plan at a glance',
@@ -186,8 +219,8 @@ export const en = {
     heavyQuestion: 'What is making the workload heavy?',
     directionQuestion: 'Is the backlog estimated to grow or shrink?',
     adjustmentQuestion: 'Which first adjustment is most likely to help?',
-    onePassQuestion: 'How long may one pass through the current backlog take?',
-    heavyNormal: 'Normal daily reviews are the largest recurring demand.',
+    onePassQuestion: 'How long may one pass through the cards entered as overdue take?',
+    heavyNormal: 'Usual Review cards due are the largest recurring demand.',
     heavyNewCards: 'New cards are the largest estimated source of recurring demand.',
     heavyHardCards: 'Difficult-card overhead is a meaningful source of daily load.',
     heavySlowReviews: 'Time per review is the main constraint: even a smaller card count can exceed the daily limit when each review takes longer.',
@@ -199,12 +232,12 @@ export const en = {
       'Recurring demand uses all available time, so backlog is estimated to stay flat.',
     directionShrinking:
       'Some daily capacity remains for overdue cards, so backlog is estimated to shrink.',
-    directionNoBacklogGrowing: 'No overdue backlog is entered, but recurring demand exceeds the daily limit and could create one.',
-    directionNoBacklogFlat: 'No overdue backlog is entered, but recurring demand already uses the full daily limit.',
-    directionNoBacklogCapacity: 'No overdue backlog is entered, and the current recurring demand leaves spare capacity.',
-    onePassLabel: 'Estimated days to complete one pass through the current backlog',
+    directionNoBacklogGrowing: 'No cards overdue before today are entered, but recurring demand exceeds the daily limit and could create a backlog.',
+    directionNoBacklogFlat: 'No cards overdue before today are entered, but recurring demand already uses the full daily limit.',
+    directionNoBacklogCapacity: 'No cards overdue before today are entered, and the current recurring demand leaves spare capacity.',
+    onePassLabel: 'Estimated study days for one pass through entered overdue cards',
     onePassUnavailable: 'No reduction capacity at the current pace',
-    onePassComplete: 'No active overdue backlog',
+    onePassComplete: 'No cards overdue before today were entered',
   },
   direction: {
     growing: 'Growing',
@@ -220,8 +253,8 @@ export const en = {
     heading: 'Where the daily workload comes from',
     description:
       'Time is allocated to recurring demand first. Any remainder can reduce the overdue backlog.',
-    normalReviews: 'Normal daily reviews',
-    normalReviewsHelp: 'Recurring reviews expected even without the overdue backlog.',
+    normalReviews: 'Usual review cards due',
+    normalReviewsHelp: 'Review cards expected on an ordinary day, excluding the entered overdue cards and new cards.',
     newCardBurden: 'Estimated new-card burden',
     newCardBurdenHelp: 'Future review-equivalent demand created by the current new-card pace.',
     hardCardOverhead: 'Estimated hard-card overhead',
@@ -262,7 +295,7 @@ export const en = {
       growthValue: '+{cardsPerDay}',
       flatValue: '{cardsPerDay}',
       fitsWithinOneDay:
-        'Only {backlog} are currently overdue, so this backlog fits within {studyDays}.',
+        'You entered {backlog} as overdue before today. At the entered time limit, one pass through that entered overdue backlog fits within {studyDays}. This does not mean all of today’s Learning, Relearning, and Review work will be finished.',
       direction: 'Estimated direction',
       onePass: 'One-pass estimate',
       target: 'Target feasibility',
@@ -317,7 +350,7 @@ export const en = {
     heading: 'Recommended first adjustment',
     deterministic: 'Rule-based recommendation · No AI',
     noBacklog:
-      'No overdue backlog is entered. Keep recurring demand within the daily limit before adding more cards.',
+      'No cards overdue before today are entered. Keep recurring demand within the daily limit before adding more cards.',
     plannedCardsGrow:
       'Adding this batch is likely to make the workload grow. Spread the cards over more days or delay the batch.',
     targetUnrealistic:
@@ -345,7 +378,9 @@ export const en = {
     editSnapshot: 'Edit snapshot',
     cancelEdit: 'Cancel editing',
     date: 'Date',
-    overdueBacklog: 'Overdue backlog',
+    overdueBacklog: 'Cards overdue before today',
+    overdueBacklogHelp:
+      'Use cards found with prop:due<=-1. Cards due today and red or green card counts are not automatically overdue.',
     dueToday: 'Due today',
     schedulerQueue: 'Scheduler queue',
     hardCards: 'Hard or leech cards',
@@ -376,7 +411,7 @@ export const en = {
     actions: 'Actions',
     edit: 'Edit',
     delete: 'Delete',
-    sparklineLabel: 'Overdue backlog trend chart',
+    sparklineLabel: 'Cards overdue before today trend chart',
   },
   glossary: {
     heading: 'What do these numbers mean?',
@@ -386,8 +421,15 @@ export const en = {
     schedulerQueueTerm: 'Scheduler queue',
     schedulerQueueDefinition:
       'Cards Anki is currently offering in the active session. This number may change while you review.',
-    overdueBacklogTerm: 'Overdue backlog',
-    overdueBacklogDefinition: 'Cards due before today that remain active.',
+    overdueBacklogTerm: 'Cards overdue before today',
+    overdueBacklogDefinition:
+      'Cards whose due date was before today and that remain unfinished. Cards due today are not included.',
+    usualReviewsTerm: 'Usual review cards due per day',
+    usualReviewsDefinition:
+      'Normal Review cards due on an ordinary day, excluding the overdue cards entered separately and new cards introduced that day.',
+    colorQuestion: 'Are overdue cards red or green?',
+    colorAnswer:
+      'Neither color reliably means “overdue.” Overdue is based on the due date: a card is overdue when it was due before today and is still unfinished. Card colors can represent different queues or states and may vary between Anki clients and versions.',
     hardCardsTerm: 'Hard or leech cards',
     hardCardsDefinition:
       'Cards that repeatedly fail or take significantly longer than normal.',
@@ -414,7 +456,7 @@ export const en = {
     heading: 'How the estimates are calculated',
     description: 'Every result is deterministic and uses only the values entered in this browser.',
     workloadHeading: '1. Daily recurring workload',
-    workloadBody: 'Normal reviews, estimated future demand from new cards, and extra hard-card time are converted to seconds and added together.',
+    workloadBody: 'Usual Review cards due, estimated future demand from new cards, and extra hard-card time are converted to seconds and added together. The usual-review input is a card estimate, not the Anki Stats answer count.',
     workloadFormula: 'recurring workload = normal reviews + new-card burden + hard-card overhead',
     directionHeading: '2. Backlog direction',
     directionBody:
@@ -428,7 +470,7 @@ export const en = {
     targetBody: 'The planner excludes selected days off, then compares required daily time with the entered limit. Impossible values are never labeled feasible.',
     targetFormula: 'required time = recurring workload + required backlog pace',
     contextHeading: 'Some advanced values are context only',
-    contextBody: 'Due today, scheduler queue, and known hard/leech card count do not change the estimate by themselves. Hard-card time uses hard-card reviews per day × extra seconds per hard review. Finishing the visible queue does not mean all Anki work is complete.',
+    contextBody: 'Cards overdue before today can be found in Anki Desktop Browse with prop:due<=-1; colored counters do not define overdue status. Due today, scheduler queue, and known hard/leech card count do not change the estimate by themselves. Anki Stats counts answers, so one Learning or Relearning card may appear more than once. Finishing the visible queue does not mean all Anki work is complete.',
   },
   export: {
     heading: 'Export your local plan',
@@ -444,6 +486,11 @@ export const en = {
     markdownTitle: 'Anki Workload Plan',
     summaryHeading: 'Summary',
     inputsHeading: 'Current inputs',
+    inputInterpretationHeading: 'How these inputs were interpreted',
+    overdueInputRule:
+      'Cards due before today and unfinished were treated as overdue. Cards due today and red or green card counts were not inferred; use prop:due<=-1 to find the overdue count.',
+    usualReviewsInputRule:
+      'Usual Review cards due were treated as an estimated card count excluding the entered overdue cards and new cards, not as the Anki Stats answer count.',
     breakdownHeading: 'Daily workload breakdown',
     scenariosHeading: 'Scenario comparison',
     recommendationHeading: 'Recommended first adjustment',
@@ -458,7 +505,7 @@ export const en = {
     hardCardNoDailyOverhead:
       'No daily hard-card overhead was included because one or both calculation inputs were zero.',
     backlogDirection: 'Backlog direction',
-    currentOverdueBacklog: 'Current overdue backlog',
+    currentOverdueBacklog: 'Cards entered as overdue before today',
   },
   confirm: {
     deleteSnapshotTitle: 'Delete this snapshot?',

@@ -16,6 +16,7 @@ const artifactsDir = resolve(process.env.QA_ARTIFACT_DIR ?? 'artifacts/qa')
 const screenshotsDir = join(artifactsDir, 'screenshots')
 const hardCardScreenshotsDir = join(screenshotsDir, 'hard-card-feedback')
 const smallBacklogScreenshotsDir = join(screenshotsDir, 'small-backlog-capacity')
+const inputSemanticsScreenshotsDir = join(screenshotsDir, 'anki-input-semantics')
 const harPath = join(artifactsDir, 'copied-brave-network.har')
 const axePath = join(artifactsDir, 'axe-results.json')
 const profileParent = process.env.BRAVE_QA_COPY_ROOT
@@ -26,6 +27,7 @@ const headless = process.env.BRAVE_QA_HEADED !== '1'
 await mkdir(screenshotsDir, { recursive: true })
 await mkdir(hardCardScreenshotsDir, { recursive: true })
 await mkdir(smallBacklogScreenshotsDir, { recursive: true })
+await mkdir(inputSemanticsScreenshotsDir, { recursive: true })
 
 const results = []
 const profiles = new Set()
@@ -206,7 +208,7 @@ try {
         hardCardReviewsPerDay: 0,
         plannedAdditionalCards: 0,
       })
-      assert((await page.locator('section[aria-labelledby="result-heading"]').innerText()).includes('No active overdue backlog'), 'Zero-backlog state is not explained.')
+      assert((await page.locator('section[aria-labelledby="result-heading"]').innerText()).includes('No cards overdue before today were entered'), 'Zero-backlog state is not explained.')
       await assertFiniteVisibleResults(page)
 
       await fillPlanner(page, {
@@ -288,7 +290,7 @@ try {
       const breakdown = page.locator('section[aria-labelledby="breakdown-heading"]')
       const breakdownText = await breakdown.innerText()
       for (const expected of [
-        'Normal daily reviews',
+        'Usual review cards due',
         '8.3 min/day',
         'Estimated hard-card overhead',
         '11.7 min/day',
@@ -387,7 +389,7 @@ try {
     })
   })
 
-  await test('Small-backlog capacity semantics and localized day labels are correct', async () => {
+  await test('Anki input semantics, small-backlog explanation, and exports are explicit', async () => {
     await withBrowser({
       locale: 'en-US',
       viewport: { width: 1440, height: 900 },
@@ -398,6 +400,42 @@ try {
       await goto(page, '/en/plan')
       await clearProductData(page)
       await page.reload({ waitUntil: 'load' })
+
+      const overdueInput = page.locator('#planner-overdueBacklog')
+      const usualReviewsInput = page.locator('#planner-typicalDailyReviews')
+      equal(
+        await page.locator('label[for="planner-overdueBacklog"] > span').first().innerText(),
+        'Cards overdue before today',
+        'English overdue input does not use the date-based label.',
+      )
+      equal(
+        await page.locator('label[for="planner-typicalDailyReviews"] > span').first().innerText(),
+        'Usual review cards due per day',
+        'English usual-review input is missing.',
+      )
+      const overdueDescribedBy = await overdueInput.getAttribute('aria-describedby') ?? ''
+      assert(overdueDescribedBy.includes('planner-overdueBacklog-help'), 'Overdue definition is not associated with the input.')
+      assert(overdueDescribedBy.includes('planner-overdue-color-warning'), 'Color warning is not associated with the overdue input.')
+      const usualReviewsDescribedBy = await usualReviewsInput.getAttribute('aria-describedby') ?? ''
+      assert(usualReviewsDescribedBy.includes('planner-typical-review-stats-help'), 'Stats warning is not associated with the usual-review input.')
+      assert(usualReviewsDescribedBy.includes('planner-typical-review-estimate-help'), 'Usual-review estimate guidance is not associated with the input.')
+      assert((await page.locator('#planner-overdueBacklog-help').innerText()).includes('Cards due today are not included'), 'English overdue helper does not exclude cards due today.')
+      assert((await page.locator('#planner-overdue-color-warning').innerText()).includes('red or green'), 'English visible color warning is missing.')
+      assert((await page.locator('#planner-typical-review-stats-help').innerText()).includes('Stats counts each answer'), 'English Stats answer-count warning is missing.')
+
+      const overdueHelp = page.locator('details').filter({ hasText: 'How do I find this number?' })
+      await openDetails(overdueHelp, 'English overdue-number guide')
+      assert((await overdueHelp.innerText()).includes('Open Browse.'), 'Browse instructions are missing.')
+      assert((await overdueHelp.innerText()).includes('prop:due<=-1'), 'Official overdue search is missing.')
+      equal(await overdueHelp.locator('code').innerText(), 'prop:due<=-1', 'Official overdue query is not marked up as code.')
+      const quickGuide = page.locator('details').filter({ hasText: 'Which number goes where?' })
+      await openDetails(quickGuide, 'English quick input guide')
+      const quickGuideText = await quickGuide.innerText()
+      for (const expected of ['Cards overdue before today', 'Usual review cards due per day', 'New cards per day', 'Average seconds per review']) {
+        assert(quickGuideText.includes(expected), `English input guide is missing: ${expected}`)
+      }
+      await screenshotInputSemantics(page, 'desktop-en-input-guide.png')
+
       await fillPlanner(page, {
         overdueBacklog: 6,
         typicalDailyReviews: 14,
@@ -407,6 +445,14 @@ try {
         newCardReviewEquivalent: 1.5,
         targetDate: localDate(14),
       })
+      assert(
+        ((await overdueInput.getAttribute('aria-describedby')) ?? '').includes('planner-overdue-confirmation'),
+        'Entered-overdue confirmation is not associated with the overdue input.',
+      )
+      assert(
+        (await page.locator('#planner-overdue-confirmation').innerText()).includes('due before today'),
+        'English entered-overdue confirmation is not visible.',
+      )
 
       const resultSummary = page.locator('section[aria-labelledby="result-heading"]')
       const currentScenario = page.locator('section[aria-labelledby="scenarios-heading"] article').first()
@@ -414,6 +460,8 @@ try {
       const englishScenarioText = await currentScenario.innerText()
       assert(englishSummaryText.includes('1 study day'), 'English summary does not use the singular study-day label.')
       assert(!englishSummaryText.includes('1 study days'), 'English summary still uses the plural label for one day.')
+      assert(englishSummaryText.includes('You entered 6 cards as overdue before today'), 'English summary does not qualify the entered overdue count.')
+      assert(englishSummaryText.includes('does not mean all of today’s Learning, Relearning, and Review work will be finished'), 'English summary does not distinguish the one-pass estimate from the full daily workload.')
       for (const expected of [
         'Recurring daily workload',
         '5.8 min',
@@ -422,7 +470,9 @@ try {
         'Backlog reduction capacity',
         'Up to 90.2 cards/day',
         'Shrinking',
-        'Only 6 cards are currently overdue, so this backlog fits within 1 study day.',
+        'You entered 6 cards as overdue before today.',
+        'one pass through that entered overdue backlog fits within 1 study day',
+        'This does not mean all of today’s Learning, Relearning, and Review work will be finished.',
       ]) {
         assert(englishScenarioText.includes(expected), `English six-card scenario is missing: ${expected}`)
       }
@@ -434,10 +484,15 @@ try {
       const englishClipboard = await page.evaluate(() => navigator.clipboard.readText())
       for (const expected of [
         'Backlog direction: Shrinking',
-        'Current overdue backlog: 6 cards',
+        'Cards overdue before today: 6',
+        'Usual review cards due per day: 14',
+        'Cards entered as overdue before today: 6 cards',
         'Backlog reduction capacity: Up to 90.2 cards/day',
-        'Estimated days to complete one pass through the current backlog: 1 study day',
-        'Only 6 cards are currently overdue, so this backlog fits within 1 study day.',
+        'Estimated study days for one pass through entered overdue cards: 1 study day',
+        'You entered 6 cards as overdue before today.',
+        'This does not mean all of today’s Learning, Relearning, and Review work will be finished.',
+        'prop:due<=-1',
+        'not as the Anki Stats answer count',
       ]) {
         assert(englishClipboard.includes(expected), `English clipboard is missing: ${expected}`)
       }
@@ -451,19 +506,53 @@ try {
         'en',
         'english-markdown-output.png',
       )
+      await screenshotMarkdown(
+        context,
+        englishMarkdown.content,
+        'en',
+        'english-markdown-export.png',
+        inputSemanticsScreenshotsDir,
+      )
 
       await page.setViewportSize({ width: 390, height: 844 })
       await assertNoHorizontalOverflow(page, '390x844 English six-card flow')
       await assertNoClippedContent(currentScenario, 'English mobile six-card scenario')
       await screenshotSmallBacklog(page, 'mobile-en-six-card-backlog.png')
+      await screenshotInputSemantics(page, 'mobile-en-six-card-result.png')
+      await screenshotInputSemantics(page, 'mobile-en-overdue-help.png')
 
       await page.getByRole('button', { name: '日本語', exact: true }).click()
       await waitForPath(page, '/ja/plan')
       equal(await page.locator('#planner-overdueBacklog').inputValue(), '6', 'Backlog was lost on Japanese switch.')
+      equal(
+        await page.locator('label[for="planner-overdueBacklog"] > span').first().innerText(),
+        '今日より前が期限の未処理カード',
+        'Japanese overdue input does not use the date-based label.',
+      )
+      equal(
+        await page.locator('label[for="planner-typicalDailyReviews"] > span').first().innerText(),
+        '普段その日に期限を迎えるレビュー数',
+        'Japanese usual-review input is missing.',
+      )
+      assert((await page.locator('#planner-overdue-color-warning').innerText()).includes('赤・緑'), 'Japanese visible color warning is missing.')
+      assert(
+        ((await page.locator('#planner-overdueBacklog').getAttribute('aria-describedby')) ?? '').includes('planner-overdue-confirmation'),
+        'Japanese entered-overdue confirmation is not associated with the overdue input.',
+      )
+      assert(
+        (await page.locator('#planner-overdue-confirmation').innerText()).includes('今日より前'),
+        'Japanese entered-overdue confirmation is not visible.',
+      )
+      assert((await page.locator('#planner-typical-review-stats-help').innerText()).includes('回答回数'), 'Japanese Stats answer-count warning is missing.')
+      const japaneseOverdueHelp = page.locator('details').filter({ hasText: 'この数値の確認方法' })
+      await openDetails(japaneseOverdueHelp, 'Japanese overdue-number guide')
+      assert((await japaneseOverdueHelp.innerText()).includes('prop:due<=-1'), 'Japanese official overdue search is missing.')
       const japaneseSummaryText = await resultSummary.innerText()
       const japaneseScenarioText = await currentScenario.innerText()
       assert(japaneseSummaryText.includes('1学習日'), 'Japanese summary does not use the natural study-day label.')
       assert(!japaneseSummaryText.includes('1 学習日'), 'Japanese summary contains an unnatural unit space.')
+      assert(japaneseSummaryText.includes('今日より前が期限の未処理カードとして6枚が入力されています'), 'Japanese summary does not qualify the entered overdue count.')
+      assert(japaneseSummaryText.includes('Anki作業全体が終わるという意味ではありません'), 'Japanese summary does not distinguish the one-pass estimate from the full daily workload.')
       for (const expected of [
         '継続的な1日の負荷',
         '5.8 分',
@@ -472,22 +561,31 @@ try {
         'backlogを減らせる上限',
         '1日あたり最大90.2枚',
         '減少',
-        '現在の期限超過backlogは6枚のため、1学習日以内に一巡できる見込みです。',
+        '今日より前が期限の未処理カードとして6枚が入力されています。',
+        'その6枚を1回ずつ処理する作業は1学習日以内に収まる見込みです。',
+        'Anki作業全体が終わるという意味ではありません。',
       ]) {
         assert(japaneseScenarioText.includes(expected), `Japanese six-card scenario is missing: ${expected}`)
       }
       await assertNoHorizontalOverflow(page, '390x844 Japanese six-card flow')
       await assertNoClippedContent(currentScenario, 'Japanese mobile six-card scenario')
       await screenshotSmallBacklog(page, 'mobile-ja-six-card-backlog.png')
+      await screenshotInputSemantics(page, 'mobile-ja-six-card-result.png')
+      await screenshotInputSemantics(page, 'mobile-ja-overdue-help.png')
 
       await page.getByRole('button', { name: 'プランをテキストでコピー', exact: true }).click()
       const japaneseClipboard = await page.evaluate(() => navigator.clipboard.readText())
       for (const expected of [
         'backlogの方向: 減少',
-        '現在の期限超過backlog: 6枚',
+        '今日より前が期限の未処理カード: 6',
+        '普段その日に期限を迎えるレビュー数: 14',
+        '今日より前が期限として入力したカード: 6枚',
         'backlogを減らせる上限: 1日あたり最大90.2枚',
-        '現在のbacklogを一巡するまでの推定日数: 1学習日',
-        '現在の期限超過backlogは6枚のため、1学習日以内に一巡できる見込みです。',
+        '期限超過として入力したカードを一巡する推定学習日数: 1学習日',
+        '今日より前が期限の未処理カードとして6枚が入力されています。',
+        'Anki作業全体が終わるという意味ではありません。',
+        'prop:due<=-1',
+        'Anki Statsの回答回数はそのまま使用しません。',
       ]) {
         assert(japaneseClipboard.includes(expected), `Japanese clipboard is missing: ${expected}`)
       }
@@ -499,10 +597,20 @@ try {
         'ja',
         'japanese-markdown-output.png',
       )
+      await screenshotMarkdown(
+        context,
+        japaneseMarkdown.content,
+        'ja',
+        'japanese-markdown-export.png',
+        inputSemanticsScreenshotsDir,
+      )
 
       await page.setViewportSize({ width: 1440, height: 900 })
       await assertNoHorizontalOverflow(page, '1440x900 Japanese six-card flow')
       await screenshotSmallBacklog(page, 'desktop-ja-six-card-backlog.png')
+      const japaneseQuickGuide = page.locator('details').filter({ hasText: 'どの数値をどこへ入力しますか？' })
+      await openDetails(japaneseQuickGuide, 'Japanese quick input guide')
+      await screenshotInputSemantics(page, 'desktop-ja-input-guide.png')
 
       await page.getByRole('link', { name: 'backlogの推移', exact: true }).click()
       await waitForPath(page, '/ja/trend')
@@ -516,6 +624,36 @@ try {
       await page.reload({ waitUntil: 'load' })
       equal(await page.locator('#planner-overdueBacklog').inputValue(), '6', 'Inputs were lost after direct route reload.')
       assert((await resultSummary.innerText()).includes('1学習日'), 'Japanese result changed after direct route reload.')
+
+      await page.setViewportSize({ width: 390, height: 844 })
+      await fillPlanner(page, {
+        overdueBacklog: 0,
+        typicalDailyReviews: 17,
+        dailyMinutes: 28.3,
+        averageSecondsPerReview: 15,
+        newCardsPerDay: 6,
+      })
+      const zeroJapaneseSummary = await resultSummary.innerText()
+      const zeroJapaneseScenario = await currentScenario.innerText()
+      assert(zeroJapaneseSummary.includes('今日より前が期限の未処理カードは入力されていません'), 'Japanese zero-backlog state is not input-based.')
+      assert(!zeroJapaneseSummary.includes('1学習日'), 'Japanese zero-backlog summary exposes a catch-up duration.')
+      assert(!zeroJapaneseScenario.includes('1学習日'), 'Japanese zero-backlog scenario exposes a catch-up duration.')
+      assert(zeroJapaneseScenario.includes('6.5 分'), 'Japanese recurring workload disappeared when the overdue input is zero.')
+      assert(zeroJapaneseSummary.includes('カードを増やす前に'), 'Japanese zero-backlog recommendation is not prevention-oriented.')
+      await assertNoHorizontalOverflow(page, '390x844 Japanese zero-backlog interpretation')
+      await screenshotInputSemantics(page, 'mobile-ja-zero-backlog.png')
+
+      await page.getByRole('button', { name: 'English', exact: true }).click()
+      await waitForPath(page, '/en/plan')
+      const zeroEnglishSummary = await resultSummary.innerText()
+      const zeroEnglishScenario = await currentScenario.innerText()
+      assert(zeroEnglishSummary.includes('No cards overdue before today were entered'), 'English zero-backlog state is not input-based.')
+      assert(!zeroEnglishSummary.includes('1 study day'), 'English zero-backlog summary exposes a catch-up duration.')
+      assert(!zeroEnglishScenario.includes('1 study day'), 'English zero-backlog scenario exposes a catch-up duration.')
+      assert(zeroEnglishScenario.includes('6.5 min'), 'English recurring workload disappeared when the overdue input is zero.')
+      assert(zeroEnglishSummary.includes('before adding more cards'), 'English zero-backlog recommendation is not prevention-oriented.')
+      await assertNoHorizontalOverflow(page, '390x844 English zero-backlog interpretation')
+      await screenshotInputSemantics(page, 'mobile-en-zero-backlog.png')
     })
   })
 
@@ -625,7 +763,7 @@ try {
       const markdown = await downloadText(page, 'Download plan as Markdown')
       assert(markdown.name.endsWith('.md') && markdown.content.includes('# Anki Workload Plan'), 'English Markdown download is invalid.')
       const csv = await downloadText(page, 'Export snapshots as CSV')
-      assert(csv.name.endsWith('.csv') && csv.content.includes('Overdue backlog'), 'CSV download is invalid.')
+      assert(csv.name.endsWith('.csv') && csv.content.includes('Cards overdue before today'), 'CSV download is invalid.')
       const json = await downloadText(page, 'Download all local data as JSON')
       const backup = JSON.parse(json.content)
       assert(Array.isArray(backup.snapshots) && backup.snapshots.length === 1, 'JSON download is missing snapshot data.')
@@ -691,6 +829,14 @@ try {
         hardCardReviewsPerDay: 100,
         extraSecondsPerHardReview: 7,
       })
+      await openDetails(
+        page.locator('details').filter({ hasText: 'How do I find this number?' }),
+        'Responsive overdue-number guide',
+      )
+      await openDetails(
+        page.locator('details').filter({ hasText: 'Which number goes where?' }),
+        'Responsive quick input guide',
+      )
       const viewports = [
         [320, 568],
         [360, 800],
@@ -753,6 +899,12 @@ try {
         for (const appPage of ['plan', 'trend', 'methodology']) {
           await goto(page, `/${locale}/${appPage}`)
           equal(await page.locator('h1').count(), 1, `${locale}/${appPage} does not have exactly one H1.`)
+          if (appPage === 'plan') {
+            const overdueGuideTitle = locale === 'en' ? 'How do I find this number?' : 'この数値の確認方法'
+            const quickGuideTitle = locale === 'en' ? 'Which number goes where?' : 'どの数値をどこへ入力しますか？'
+            await openDetails(page.locator('details').filter({ hasText: overdueGuideTitle }), `${locale} overdue guide Axe scan`)
+            await openDetails(page.locator('details').filter({ hasText: quickGuideTitle }), `${locale} quick guide Axe scan`)
+          }
           await runAxe(page, `${locale}/${appPage}`)
         }
       }
@@ -819,6 +971,16 @@ try {
       'small-backlog-capacity/mobile-ja-six-card-backlog.png',
       'small-backlog-capacity/english-markdown-output.png',
       'small-backlog-capacity/japanese-markdown-output.png',
+      'anki-input-semantics/mobile-en-overdue-help.png',
+      'anki-input-semantics/mobile-ja-overdue-help.png',
+      'anki-input-semantics/desktop-en-input-guide.png',
+      'anki-input-semantics/desktop-ja-input-guide.png',
+      'anki-input-semantics/mobile-en-six-card-result.png',
+      'anki-input-semantics/mobile-ja-six-card-result.png',
+      'anki-input-semantics/mobile-en-zero-backlog.png',
+      'anki-input-semantics/mobile-ja-zero-backlog.png',
+      'anki-input-semantics/english-markdown-export.png',
+      'anki-input-semantics/japanese-markdown-export.png',
     ]
     for (const name of required) {
       const info = await stat(join(screenshotsDir, name)).catch(() => null)
@@ -1078,7 +1240,7 @@ async function loadDemo(page, id, buttonName) {
   await openDetails(details, 'Demo picker')
   await page.locator('#demo-select').selectOption(id)
   await page.getByRole('button', { name: buttonName, exact: true }).click()
-  await page.getByText('Demo data loaded.', { exact: true }).waitFor()
+  await page.getByText('Demo data loaded using the input definitions shown above.', { exact: true }).waitFor()
 }
 
 async function openLocalDataControls(page) {
@@ -1098,7 +1260,7 @@ async function assertFourAnswers(page) {
     'What is making the workload heavy?',
     'Is the backlog estimated to grow or shrink?',
     'Which first adjustment is most likely to help?',
-    'How long may one pass through the current backlog take?',
+    'How long may one pass through the cards entered as overdue take?',
   ]) {
     assert(visibleText.includes(question), `Common-pain answer is missing: ${question}`)
   }
@@ -1277,7 +1439,27 @@ async function screenshotSmallBacklog(page, name) {
   }
 }
 
-async function screenshotMarkdown(context, content, locale, name) {
+async function screenshotInputSemantics(page, name) {
+  await page.evaluate(() => {
+    if (document.activeElement instanceof HTMLElement) document.activeElement.blur()
+    const skipLink = document.querySelector('.skip-link')
+    if (skipLink instanceof HTMLElement) skipLink.style.display = 'none'
+  })
+  try {
+    await page.screenshot({
+      path: join(inputSemanticsScreenshotsDir, name),
+      fullPage: true,
+      animations: 'disabled',
+    })
+  } finally {
+    await page.evaluate(() => {
+      const skipLink = document.querySelector('.skip-link')
+      if (skipLink instanceof HTMLElement) skipLink.style.removeProperty('display')
+    })
+  }
+}
+
+async function screenshotMarkdown(context, content, locale, name, outputDirectory = smallBacklogScreenshotsDir) {
   const output = await context.newPage()
   try {
     await output.setViewportSize({ width: 900, height: 900 })
@@ -1312,7 +1494,7 @@ async function screenshotMarkdown(context, content, locale, name) {
       }
     }, { markdown: content, language: locale })
     await output.screenshot({
-      path: join(smallBacklogScreenshotsDir, name),
+      path: join(outputDirectory, name),
       fullPage: true,
       animations: 'disabled',
     })

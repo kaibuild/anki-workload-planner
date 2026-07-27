@@ -61,14 +61,14 @@ export const ja = {
     requiredHint: '必須項目には印があります。',
     fields: {
       overdueBacklog: {
-        label: '期限超過のbacklog',
+        label: '今日より前が期限の未処理カード',
         helper:
-          '今日より前が期限で、まだ有効なカード数です。今日が期限のカードは含めません。',
+          '今日より前が期限で、まだ未処理のカード数を入力してください。今日が期限のカードは含めません。',
       },
       typicalDailyReviews: {
-        label: '普段の1日あたりレビュー数',
+        label: '普段その日に期限を迎えるレビュー数',
         helper:
-          '期限超過backlogと新規カードを除いた、普段発生するレビュー数です。',
+          '上で入力した期限超過カードと、その日に追加する新規カードを除き、普段その日に必要になるReviewカード数の目安を入力してください。',
       },
       dailyMinutes: {
         label: '1日のAnki上限時間',
@@ -84,7 +84,7 @@ export const ja = {
       },
       targetDate: {
         label: '目標日',
-        helper: '現在のbacklogを一巡したい期日です。',
+        helper: '期限超過として入力したカードを一巡したい期日です。',
       },
       dueToday: {
         label: '今日が期限のカード',
@@ -146,6 +146,39 @@ export const ja = {
       collapsedIncluded: '難しいカードの追加負荷を反映中',
       collapsedShort: '難しいカード',
     },
+    inputSemantics: {
+      overdueColorWarning:
+        '赤・緑などの表示数をそのまま入力しないでください。カードの色だけではoverdueかどうかは判断できません。',
+      overdueConfirmation:
+        'これらが今日より前に期限を迎えたカードであることを確認してください。赤・緑の表示数が、そのままoverdueカード数になるわけではありません。',
+      findOverdueTitle: 'この数値の確認方法',
+      findOverdueIntro: 'Anki Desktopの場合：',
+      findOverdueStepBrowse: 'Browseを開きます。',
+      findOverdueStepSearch: '次の条件で検索します：',
+      findOverdueQuery: 'prop:due<=-1',
+      findOverdueStepCount: '検索結果のカード数を使用します。',
+      findOverdueExplanation:
+        'この検索は、今日より前が期限で、まだoverdueのカードを表示します。',
+      findOverdueDoNotGuess:
+        'この数値を確認できない場合は、カードの色から推測しないでください。',
+      dailyReviewStatsWarning:
+        'Anki Statsの「review count」をそのまま入力しないでください。Statsは回答回数を数えるため、同じLearning・Relearningカードが複数回含まれることがあります。',
+      dailyReviewEstimateNote:
+        '概算で構いません。Learning中のカードや難しいカードによって時間が長くなる場合は、「1レビューあたりの平均秒数」または難しいカードの設定へ反映してください。',
+      quickGuideTitle: 'どの数値をどこへ入力しますか？',
+      quickGuideOverdueTerm: '今日より前が期限の未処理カード',
+      quickGuideOverdueDefinition:
+        '期限を過ぎても未処理のカードです。prop:due<=-1で確認できます。',
+      quickGuideReviewsTerm: '普段その日に期限を迎えるレビュー数',
+      quickGuideReviewsDefinition:
+        '期限超過backlogとその日の新規カードを除いた、普段のReview負荷です。',
+      quickGuideNewCardsTerm: '1日あたりの新規カード数',
+      quickGuideNewCardsDefinition:
+        '毎日新しく学習へ追加するカード数です。',
+      quickGuideSecondsTerm: '1レビューあたりの平均秒数',
+      quickGuideSecondsDefinition:
+        '1回答にかかるおよその時間です。長いsentence cardでは大きめに設定します。',
+    },
     weekdays: {
       monday: '月曜日',
       tuesday: '火曜日',
@@ -179,7 +212,7 @@ export const ja = {
     extreme: '極端な負荷',
     growing: '負荷が増加中',
     plannedAddition: 'デッキ追加予定',
-    loaded: 'デモデータを読み込みました。',
+    loaded: '上に表示された入力定義に沿うデモデータを読み込みました。',
   },
   summary: {
     heading: '現在のプラン',
@@ -187,8 +220,8 @@ export const ja = {
     heavyQuestion: '何が負荷を重くしている？',
     directionQuestion: 'backlogは増える見込みか、減る見込みか？',
     adjustmentQuestion: '最初に何を調整すると効果が大きい？',
-    onePassQuestion: '現在のbacklogを一巡するまでどのくらいかかる？',
-    heavyNormal: '普段の日次レビューが、継続的な負荷の最大要因です。',
+    onePassQuestion: '期限超過として入力したカードを一巡するまで、どのくらいかかりそうですか？',
+    heavyNormal: '普段その日に期限を迎えるReviewカードが、継続的な負荷の最大要因です。',
     heavyNewCards: '新規カードが、推定される継続的な負荷の最大要因です。',
     heavyHardCards: '難しいカードの追加時間が、日次負荷の無視できない要因です。',
     heavySlowReviews: '1回のレビュー時間が主な制約です。カード数が少なくても、1枚に時間がかかると1日の上限を超えます。',
@@ -200,12 +233,12 @@ export const ja = {
       '継続的な負荷だけで利用可能な時間を使い切るため、backlogは横ばいの見込みです。',
     directionShrinking:
       '期限超過カードに使える時間が残るため、backlogは減る見込みです。',
-    directionNoBacklogGrowing: '期限超過backlogは入力されていませんが、継続負荷が1日の上限を超えており、今後backlogが生じるおそれがあります。',
-    directionNoBacklogFlat: '期限超過backlogは入力されていませんが、継続負荷だけで1日の上限を使い切っています。',
-    directionNoBacklogCapacity: '期限超過backlogは入力されておらず、現在の継続負荷には余力があります。',
-    onePassLabel: '現在のbacklogを一巡するまでの推定日数',
+    directionNoBacklogGrowing: '今日より前が期限の未処理カードは入力されていませんが、継続負荷が1日の上限を超えており、今後backlogが生じるおそれがあります。',
+    directionNoBacklogFlat: '今日より前が期限の未処理カードは入力されていませんが、継続負荷だけで1日の上限を使い切っています。',
+    directionNoBacklogCapacity: '今日より前が期限の未処理カードは入力されておらず、現在の継続負荷には余力があります。',
+    onePassLabel: '期限超過として入力したカードを一巡する推定学習日数',
     onePassUnavailable: '現在のペースではbacklogを減らす余力がありません',
-    onePassComplete: '有効な期限超過backlogはありません',
+    onePassComplete: '今日より前が期限の未処理カードは入力されていません',
   },
   direction: {
     growing: '増加',
@@ -221,8 +254,8 @@ export const ja = {
     heading: '1日の負荷の内訳',
     description:
       'まず継続的な負荷に時間を使い、残りのbacklogを減らすために使えます。',
-    normalReviews: '普段の日次レビュー',
-    normalReviewsHelp: '期限超過backlogがなくても発生する継続的なレビューです。',
+    normalReviews: '普段その日に期限を迎えるReviewカード',
+    normalReviewsHelp: '期限超過として入力したカードと新規カードを除き、普段の日に期限を迎えるReviewカードです。',
     newCardBurden: '新規カードの推定負荷',
     newCardBurdenHelp: '現在の新規カードペースが生む、将来のレビュー相当負荷です。',
     hardCardOverhead: '難しいカードの推定追加時間',
@@ -263,7 +296,7 @@ export const ja = {
       growthValue: '1日あたり+{cards}',
       flatValue: '1日あたり{cards}',
       fitsWithinOneDay:
-        '現在の期限超過backlogは{backlog}のため、{studyDays}以内に一巡できる見込みです。',
+        '今日より前が期限の未処理カードとして{backlog}が入力されています。入力した時間上限では、その{backlog}を1回ずつ処理する作業は{studyDays}以内に収まる見込みです。これは、今日のLearning・Relearning・Reviewを含むAnki作業全体が終わるという意味ではありません。',
       direction: '推定方向',
       onePass: '一巡するまでの推定',
       target: '目標日の実現性',
@@ -318,7 +351,7 @@ export const ja = {
     heading: '最初におすすめする調整',
     deterministic: 'ルールに基づく提案 · AI不使用',
     noBacklog:
-      '期限超過backlogは入力されていません。カードを増やす前に、継続負荷を1日の上限内に保ってください。',
+      '今日より前が期限の未処理カードは入力されていません。カードを増やす前に、継続負荷を1日の上限内に保ってください。',
     plannedCardsGrow:
       'このカード追加では負荷が増える可能性があります。追加期間を延ばすか、開始を遅らせてください。',
     targetUnrealistic:
@@ -346,7 +379,9 @@ export const ja = {
     editSnapshot: '記録を編集',
     cancelEdit: '編集をキャンセル',
     date: '日付',
-    overdueBacklog: '期限超過backlog',
+    overdueBacklog: '今日より前が期限の未処理カード',
+    overdueBacklogHelp:
+      'prop:due<=-1で見つかるカードを使用してください。今日が期限のカードや赤・緑の表示数が、そのままoverdueになるわけではありません。',
     dueToday: '今日が期限',
     schedulerQueue: 'scheduler queue',
     hardCards: '難しい・leechカード',
@@ -377,7 +412,7 @@ export const ja = {
     actions: '操作',
     edit: '編集',
     delete: '削除',
-    sparklineLabel: '期限超過backlogの推移グラフ',
+    sparklineLabel: '今日より前が期限の未処理カードの推移グラフ',
   },
   glossary: {
     heading: 'これらの数値の違い',
@@ -387,8 +422,15 @@ export const ja = {
     schedulerQueueTerm: 'Scheduler queue',
     schedulerQueueDefinition:
       '現在のセッションでAnkiが提示しているカード。この数値はレビュー中に変化する場合があります。',
-    overdueBacklogTerm: '期限超過backlog',
-    overdueBacklogDefinition: '今日より前が期限で、まだ有効なカード。',
+    overdueBacklogTerm: '今日より前が期限の未処理カード',
+    overdueBacklogDefinition:
+      '今日より前が期限だったのに、まだ未処理のカードです。今日が期限のカードは含めません。',
+    usualReviewsTerm: '普段その日に期限を迎えるレビュー数',
+    usualReviewsDefinition:
+      '別に入力した期限超過カードと、その日に追加する新規カードを除いた、普段の日に期限を迎えるReviewカードです。',
+    colorQuestion: 'overdueカードは赤ですか、緑ですか？',
+    colorAnswer:
+      'どちらの色も、overdueを確実に表すものではありません。Overdueは期限日で決まり、今日より前が期限だったのに未処理のカードを指します。カードの色はqueueや状態を表す場合があり、Ankiの種類やバージョンによって異なることがあります。',
     hardCardsTerm: '難しい・leechカード',
     hardCardsDefinition:
       '何度も失敗する、または通常より大幅に時間がかかるカード。',
@@ -415,7 +457,7 @@ export const ja = {
     heading: '概算の計算方法',
     description: 'すべての結果は決められた式で計算され、このブラウザに入力した値だけを使います。',
     workloadHeading: '1. 毎日の継続負荷',
-    workloadBody: '普段のレビュー、新規カードが生む将来負荷、難しいカードの追加時間を秒へ換算して合計します。',
+    workloadBody: '普段その日に期限を迎えるReviewカード、新規カードが生む将来負荷、難しいカードの追加時間を秒へ換算して合計します。普段のレビュー入力はカード数の概算であり、Anki Statsの回答回数ではありません。',
     workloadFormula: '継続負荷 = 普段のレビュー + 新規カード負荷 + 難しいカードの追加負荷',
     directionHeading: '2. backlogの方向',
     directionBody:
@@ -429,7 +471,7 @@ export const ja = {
     targetBody: '休む曜日を除外し、必要な1日時間を入力した上限と比べます。不可能な値を実現可能とは表示しません。',
     targetFormula: '必要時間 = 継続負荷 + 目標達成に必要なbacklogペース',
     contextHeading: '詳細設定には参考情報のみの値があります',
-    contextBody: '今日が期限のカード、scheduler queue、既知のleech・難しいカード数だけでは推定結果は変わりません。難しいカードの追加時間は「1日あたりのレビュー数 × 1レビューあたりの追加秒数」で計算します。現在表示されているqueueを終えても、Anki全体の作業が完了したとは限りません。',
+    contextBody: '今日より前が期限の未処理カードは、Anki DesktopのBrowseでprop:due<=-1を検索して確認できます。色付きの表示数だけではoverdueを判定できません。今日が期限のカード、scheduler queue、既知のleech・難しいカード数だけでは推定結果は変わりません。Anki Statsは回答回数を数えるため、同じLearning・Relearningカードが複数回含まれることがあります。現在のqueueを終えても、Anki全体の作業が完了したとは限りません。',
   },
   export: {
     heading: 'ローカルプランを書き出す',
@@ -445,6 +487,11 @@ export const ja = {
     markdownTitle: 'Anki負荷プラン',
     summaryHeading: 'サマリー',
     inputsHeading: '現在の入力',
+    inputInterpretationHeading: '入力値の解釈',
+    overdueInputRule:
+      '今日より前が期限で未処理のカードをoverdueとして扱います。今日が期限のカードや赤・緑の表示数からは推測しません。overdue数はprop:due<=-1で確認できます。',
+    usualReviewsInputRule:
+      '普段その日に期限を迎えるReviewカード数の概算として扱います。入力済みの期限超過カードと新規カードを除き、Anki Statsの回答回数はそのまま使用しません。',
     breakdownHeading: '1日の負荷内訳',
     scenariosHeading: '調整案の比較',
     recommendationHeading: '最初におすすめする調整',
@@ -459,7 +506,7 @@ export const ja = {
     hardCardNoDailyOverhead:
       '計算に使う入力の一方または両方が0のため、難しいカードの追加負荷は計算に含まれていません。',
     backlogDirection: 'backlogの方向',
-    currentOverdueBacklog: '現在の期限超過backlog',
+    currentOverdueBacklog: '今日より前が期限として入力したカード',
   },
   confirm: {
     deleteSnapshotTitle: 'この記録を削除しますか？',

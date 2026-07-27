@@ -7,6 +7,10 @@ export type GlossaryLabels = {
   queueDefinition: string
   overdue: string
   overdueDefinition: string
+  usualReviews: string
+  usualReviewsDefinition: string
+  colorQuestion: string
+  colorAnswer: string
   hard: string
   hardDefinition: string
 }
@@ -16,6 +20,8 @@ export function Glossary({ labels }: { labels: GlossaryLabels }) {
     [labels.dueToday, labels.dueTodayDefinition],
     [labels.queue, labels.queueDefinition],
     [labels.overdue, labels.overdueDefinition],
+    [labels.usualReviews, labels.usualReviewsDefinition],
+    [labels.colorQuestion, labels.colorAnswer],
     [labels.hard, labels.hardDefinition],
   ]
   return (
